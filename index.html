@@ -85,6 +85,11 @@
             .moodle-nav-panel { display: none; position: fixed; bottom: 0; left: 0; right: 0; top: auto; max-height: 65vh; border-radius: 16px 16px 0 0; z-index: 1001; box-shadow: 0 -5px 25px rgba(0,0,0,0.9); }
             .moodle-nav-panel.show-mobile { display: block; }
         }
+
+        /* Modal Dán Text */
+        #paste-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; align-items: center; justify-content: center; }
+        .paste-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; width: 100%; max-width: 600px; }
+        .paste-textarea { width: 100%; height: 220px; background: #090d16; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 10px; font-size: 13px; outline: none; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -95,9 +100,10 @@
         <div class="timer-box" id="timer-box">⏱️ 40:00</div>
         <div class="head-actions">
             <input type="file" id="file-picker" multiple accept=".txt" style="display:none;" onchange="handleFileSelect(event)">
-            <button class="btn-head btn-import" onclick="document.getElementById('file-picker').click()">📁 Nạp 3 File .txt</button>
+            <button class="btn-head btn-import" onclick="document.getElementById('file-picker').click()">📁 Nạp File .txt</button>
+            <button class="btn-head" onclick="openPasteModal()">📋 Dán Text</button>
             <button class="btn-head" onclick="shuffleQuestions()">🔀 Tráo đề</button>
-            <button class="btn-head" onclick="resetAnswers()">Làm lại</button>
+            <button class="btn-head" onclick="clearDataAndReset()">Xóa dữ liệu</button>
         </div>
     </div>
 </header>
@@ -147,18 +153,49 @@
     </div>
 </div>
 
+<div id="paste-modal">
+    <div class="paste-box">
+        <h3 style="color: var(--gold); font-size: 15px;">Dán trực tiếp văn bản từ file .txt vào đây:</h3>
+        <textarea id="paste-input" class="paste-textarea" placeholder="Copy toàn bộ nội dung trong file chương 1, chương 2 hoặc chương 3 dán vào đây..."></textarea>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn-head" onclick="closePasteModal()">Hủy</button>
+            <button class="btn-head btn-import" onclick="handlePasteImport()">Nạp Dữ Liệu</button>
+        </div>
+    </div>
+</div>
+
 <button class="mobile-nav-toggle" onclick="toggleMobileNav()">📋 Bảng câu hỏi</button>
 
 <script>
-let globalBank = JSON.parse(localStorage.getItem('LSD_BANK_V3') || '[]');
+let globalBank = JSON.parse(localStorage.getItem('LSD_ULTRA_BANK_2026') || '[]');
 let currentMode = 'ch1';
 let activeQuestions = [];
 let userState = {}; 
 let timerInterval = null;
 let timeLeft = 0;
 
-// PARSER TỐI ƯU ĐỌC CHUẨN CẢ 3 CHƯƠNG THEO TÊN FILE
-function parseTextToQuestions(text, chNumber) {
+// NHẬN DIỆN THÔNG MINH BẬC CAO DỰA TRÊN TỪ KHÓA LỊCH SỬ CỐT LÕI
+function detectChapterSmart(fname, text) {
+    const fn = (fname || '').toLowerCase();
+    if (fn.includes('chương 3') || fn.includes('chuong 3') || fn.includes('ch3') || fn.includes('3.txt')) return 3;
+    if (fn.includes('chương 2') || fn.includes('chuong 2') || fn.includes('ch2') || fn.includes('2.txt')) return 2;
+    if (fn.includes('chương 1') || fn.includes('chuong 1') || fn.includes('ch1') || fn.includes('1.txt')) return 1;
+
+    const t = text.toLowerCase();
+    // Từ khóa đặc trưng của Chương 3
+    if (t.includes('đổi mới') || t.includes('đại hội vi') || t.includes('đại hội vii') || t.includes('cương lĩnh 1991') || t.includes('cương lĩnh 2011') || t.includes('wto') || t.includes('gạc ma')) {
+        return 3;
+    }
+    // Từ khóa đặc trưng của Chương 2
+    if (t.includes('điện biên phủ') || t.includes('hiệp định pari') || t.includes('hiệp định sơ bộ') || t.includes('kháng chiến chống thực dân pháp') || t.includes('nava') || t.includes('vạn tường')) {
+        return 2;
+    }
+    return 1;
+}
+
+// BỘ TRÍCH XUẤT CÂU HỎI CHUẨN XÁC
+function parseTextToQuestions(text, fname) {
+    const chNumber = detectChapterSmart(fname, text);
     const rawBlocks = text.split(/🔴\s*(?:\*\*)?Câu hỏi\s*(\d+)[\*:]*/i);
     const parsed = [];
 
@@ -194,7 +231,7 @@ function parseTextToQuestions(text, chNumber) {
 
         if (opts.length >= 2 && ans !== -1) {
             parsed.push({
-                id: `c${chNumber}_${num}_${Math.random().toString(36).substr(2, 4)}`,
+                id: `c${chNumber}_${num}`,
                 num: num,
                 ch: chNumber,
                 q: qTitle,
@@ -204,53 +241,68 @@ function parseTextToQuestions(text, chNumber) {
             });
         }
     }
-    return parsed;
+    return { ch: chNumber, list: parsed };
 }
 
-// XỬ LÝ CHỌN FILE VÀ PHÂN LOẠI CHÍNH XÁC THEO TÊN FILE
+// CƠ CHẾ NẠP CỘNG DỒN THÔNG MINH (UPSERT)
+function saveQuestionsToBank(parsedResult) {
+    let addedOrUpdated = 0;
+    parsedResult.list.forEach(q => {
+        const idx = globalBank.findIndex(item => item.ch === q.ch && item.num === q.num);
+        if (idx >= 0) {
+            globalBank[idx] = q;
+        } else {
+            globalBank.push(q);
+        }
+        addedOrUpdated++;
+    });
+
+    localStorage.setItem('LSD_ULTRA_BANK_2026', JSON.stringify(globalBank));
+    updateCounters();
+    return addedOrUpdated;
+}
+
+// Xử lý nạp file
 async function handleFileSelect(evt) {
     const files = evt.target.files;
     if (!files || files.length === 0) return;
 
-    // Reset lại ngân hàng để tránh dồn câu nhầm lẫn
-    globalBank = [];
-
-    let totalAdded = 0;
     for (let f of files) {
         const text = await f.text();
-        const fname = f.name.toLowerCase();
-
-        // Nhận diện Chương dựa thẳng vào tên file
-        let detectedCh = 1;
-        if (fname.includes('2') || fname.includes('chương 2') || fname.includes('chuong 2')) {
-            detectedCh = 2;
-        } else if (fname.includes('3') || fname.includes('chương 3') || fname.includes('chuong 3')) {
-            detectedCh = 3;
-        } else {
-            detectedCh = 1;
-        }
-
-        const parsed = parseTextToQuestions(text, detectedCh);
-        parsed.forEach(q => {
-            globalBank.push(q);
-            totalAdded++;
-        });
+        const res = parseTextToQuestions(text, f.name);
+        saveQuestionsToBank(res);
     }
-
-    localStorage.setItem('LSD_BANK_V3', JSON.stringify(globalBank));
-    userState = {};
-    updateCounters();
 
     const c1 = globalBank.filter(q => q.ch === 1).length;
     const c2 = globalBank.filter(q => q.ch === 2).length;
     const c3 = globalBank.filter(q => q.ch === 3).length;
 
-    alert(`🎉 ĐÃ NẠP THÀNH CÔNG ${totalAdded} CÂU HỎI!\n` +
+    alert(`🎉 NẠP THÀNH CÔNG!\n\n` +
           `• Chương 1: ${c1} câu\n` +
           `• Chương 2: ${c2} câu\n` +
-          `• Chương 3: ${c3} câu\n` +
-          `Tổng cộng đã sẵn sàng thi thử 50 câu!`);
+          `• Chương 3: ${c3} câu\n\n` +
+          `🎯 TỔNG CỘNG: ${globalBank.length} CÂU HỎI TRONG BỘ NHỚ!`);
 
+    loadMode(currentMode);
+    evt.target.value = '';
+}
+
+// Xử lý dán text
+function openPasteModal() { document.getElementById('paste-modal').style.display = 'flex'; }
+function closePasteModal() { document.getElementById('paste-modal').style.display = 'none'; }
+function handlePasteImport() {
+    const text = document.getElementById('paste-input').value.trim();
+    if (!text) return;
+    const res = parseTextToQuestions(text, '');
+    saveQuestionsToBank(res);
+    document.getElementById('paste-input').value = '';
+    closePasteModal();
+
+    const c1 = globalBank.filter(q => q.ch === 1).length;
+    const c2 = globalBank.filter(q => q.ch === 2).length;
+    const c3 = globalBank.filter(q => q.ch === 3).length;
+
+    alert(`🎉 ĐÃ NẠP THÀNH CÔNG!\n• Chương 1: ${c1} câu | Chương 2: ${c2} câu | Chương 3: ${c3} câu`);
     loadMode(currentMode);
 }
 
@@ -290,14 +342,13 @@ function loadMode(mode, btnEl) {
 
 function startExam(count, minutes, btnEl) {
     if (globalBank.length === 0) {
-        alert('Chưa có câu hỏi nào! Hãy bấm "📁 Nạp 3 File .txt" trước để nạp đề.');
+        alert('Chưa có câu hỏi nào! Hãy bấm "📁 Nạp File .txt" hoặc "📋 Dán Text" trước.');
         return;
     }
 
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
 
-    // Bốc ngẫu nhiên từ toàn bộ ngân hàng câu hỏi cả 3 chương
     const shuffled = [...globalBank].sort(() => Math.random() - 0.5);
     activeQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
     userState = {};
@@ -344,7 +395,7 @@ function renderQuestions() {
 
     if (activeQuestions.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding:50px 15px; color:var(--text-sub);">
-            Mục này chưa có câu hỏi.<br>Hãy bấm nút <b>"📁 Nạp 3 File .txt"</b> ở thanh menu trên cùng để chọn 3 file câu hỏi!
+            Mục này chưa có câu hỏi nào.<br>Hãy bấm nút <b>"📁 Nạp File .txt"</b> hoặc <b>"📋 Dán Text"</b> ở trên để nạp câu hỏi vào!
         </div>`;
         return;
     }
@@ -471,9 +522,12 @@ function shuffleQuestions() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function resetAnswers() {
-    if (confirm('Làm lại đề này từ đầu?')) {
+function clearDataAndReset() {
+    if (confirm('Bạn có muốn xóa toàn bộ câu hỏi đã lưu để nạp lại từ đầu?')) {
+        globalBank = [];
         userState = {};
+        localStorage.removeItem('LSD_ULTRA_BANK_2026');
+        updateCounters();
         renderAll();
     }
 }
@@ -484,7 +538,6 @@ function toggleMobileNav() {
     document.getElementById('btn-close-nav').style.display = p.classList.contains('show-mobile') ? 'inline' : 'none';
 }
 
-// Khởi chạy
 updateCounters();
 loadMode('ch1');
 </script>
