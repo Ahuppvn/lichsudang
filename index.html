@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Hệ Thống Thi Thử Lịch Sử Đảng - Moodle Pro</title>
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-card: #131926;
+            --bg-card-hover: #1b2438;
+            --border: #232f48;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --accent: #38bdf8;
+            --correct: #10b981;
+            --correct-bg: rgba(16, 185, 129, 0.15);
+            --wrong: #ef4444;
+            --wrong-bg: rgba(239, 68, 68, 0.18);
+            --gold: #fbbf24;
+            --nav-border: #475569;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-main); line-height: 1.5; padding-bottom: 60px; }
+
+        /* Header cố định */
+        header { background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 10px 16px; }
+        .header-wrap { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .brand { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+        .brand span { color: var(--gold); }
+        .timer-box { background: #1e293b; border: 1px solid var(--gold); color: var(--gold); padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 800; display: none; }
+        .head-actions { display: flex; gap: 6px; }
+        .btn-head { background: #1e293b; border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-head:active { transform: scale(0.96); }
+
+        .main-layout { max-width: 1200px; margin: 15px auto; padding: 0 12px; display: grid; grid-template-columns: 1fr 280px; gap: 18px; align-items: start; }
+        @media (max-width: 880px) { .main-layout { grid-template-columns: 1fr; } }
+
+        /* Bảng điều khiển chế độ thi */
+        .mode-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 15px; }
+        .mode-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .mode-btn { background: #0b0f19; border: 1px solid var(--border); color: var(--text-sub); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .mode-btn:hover, .mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        .mode-btn.exam { border-color: var(--gold); color: var(--gold); }
+        .mode-btn.exam.active { background: var(--gold); color: #000; }
+
+        .score-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+        .score-box { background: #090d16; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--border); }
+        .score-num { font-size: 16px; font-weight: 900; }
+        .score-sub { font-size: 10px; color: var(--text-sub); }
+
+        /* Danh sách câu hỏi */
+        .q-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; scroll-margin-top: 75px; transition: border-color 0.2s; }
+        .q-card.done-ok { border-color: var(--correct); }
+        .q-card.done-fail { border-color: var(--wrong); }
+        .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .q-badge { background: #1e293b; color: var(--accent); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+        .q-trap-badge { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+        .q-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+
+        .opt-list { display: flex; flex-direction: column; gap: 8px; }
+        .opt-item { background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-main); font-size: 13.5px; text-align: left; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; min-height: 44px; }
+        .opt-item:active { background: var(--bg-card-hover); }
+        .opt-char { background: #1e293b; border: 1px solid var(--border); border-radius: 4px; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+
+        .opt-item.is-correct { background: var(--correct-bg) !important; border-color: var(--correct) !important; color: #34d399 !important; font-weight: bold; }
+        .opt-item.is-correct .opt-char { background: var(--correct); color: #000; }
+        .opt-item.is-wrong { background: var(--wrong-bg) !important; border-color: var(--wrong) !important; color: #f87171 !important; }
+        .opt-item.is-wrong .opt-char { background: var(--wrong); color: #fff; }
+        .opt-item.hint-correct { border: 1px dashed var(--correct) !important; color: #34d399; }
+        .opt-item.disabled { pointer-events: none; }
+
+        .trap-explain { display: none; background: #261214; border-left: 4px solid var(--wrong); padding: 10px 12px; border-radius: 0 6px 6px 0; margin-top: 10px; font-size: 13px; line-height: 1.5; color: #fecaca; }
+        .trap-explain b { color: #f87171; display: block; margin-bottom: 2px; }
+
+        /* LƯỚI ĐIỀU HƯỚNG CÂU HỎI KIỂU MOODLE */
+        .moodle-nav-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; position: sticky; top: 75px; max-height: calc(100vh - 90px); overflow-y: auto; }
+        .nav-panel-title { font-size: 13px; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .moodle-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+        .grid-btn { aspect-ratio: 0.85; background: #090d16; border: 1.5px solid var(--nav-border); border-radius: 4px; color: var(--text-main); font-size: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; }
+        .grid-btn:hover { border-color: #fff; }
+        .grid-btn.active { border-color: var(--accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.5); }
+        .grid-btn.c-correct { border-color: var(--correct); background: var(--correct-bg); color: #34d399; }
+        .grid-btn.c-wrong { border-color: var(--wrong); background: var(--wrong-bg); color: #f87171; }
+
+        /* Nút bật/tắt bảng lưới trên điện thoại */
+        .mobile-nav-toggle { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: #000; border: none; padding: 10px 16px; border-radius: 30px; font-size: 13px; font-weight: 900; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); cursor: pointer; }
+        @media (max-width: 880px) {
+            .mobile-nav-toggle { display: block; }
+            .moodle-nav-panel { display: none; position: fixed; bottom: 0; left: 0; right: 0; top: auto; max-height: 65vh; border-radius: 16px 16px 0 0; z-index: 1001; box-shadow: 0 -5px 25px rgba(0,0,0,0.9); }
+            .moodle-nav-panel.show-mobile { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-wrap">
+        <div class="brand">🎯 LỊCH SỬ ĐẢNG <span>MOODLE</span></div>
+        <div class="timer-box" id="timer-box">⏱️ 15:00</div>
+        <div class="head-actions">
+            <button class="btn-head" onclick="shuffleQuestions()">🔀 Tráo đề</button>
+            <button class="btn-head" onclick="resetAnswers()">Làm lại</button>
+        </div>
+    </div>
+</header>
+
+<div class="main-layout">
+    <!-- Cột trái: Bộ điều khiển & Câu hỏi -->
+    <div>
+        <div class="mode-card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--gold); margin-bottom: 8px;">CHỌN CHẾ ĐỘ ÔN / THI:</div>
+            <div class="mode-row">
+                <button class="mode-btn active" onclick="loadMode('ch1', this)">Chương 1 (80 câu)</button>
+                <button class="mode-btn" onclick="loadMode('ch2', this)">Chương 2</button>
+                <button class="mode-btn" onclick="loadMode('ch3', this)">Chương 3</button>
+                <button class="mode-btn" onclick="loadMode('traps', this)">⚠️ 15 Câu Bẫy</button>
+                <button class="mode-btn exam" onclick="startExam(20, 15, this)">⚡ Thi Thử 20 Câu (15p)</button>
+                <button class="mode-btn exam" onclick="startExam(50, 40, this)">🔥 Thi Thử 50 Câu (40p)</button>
+            </div>
+            <div class="score-bar">
+                <div class="score-box">
+                    <div class="score-num" id="s-total" style="color: var(--accent);">0</div>
+                    <div class="score-sub">TỔNG CÂU</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-num" id="s-done" style="color: #fff;">0</div>
+                    <div class="score-sub">ĐÃ LÀM</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-num" id="s-correct" style="color: var(--correct);">0</div>
+                    <div class="score-sub">ĐÚNG</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-num" id="s-point" style="color: var(--gold);">0.0</div>
+                    <div class="score-sub">ĐIỂM /10</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="questions-container"></div>
+    </div>
+
+    <!-- Cột phải: Bảng lưới câu hỏi Moodle -->
+    <div class="moodle-nav-panel" id="nav-panel">
+        <div class="nav-panel-title">
+            <span>Danh Sách Câu Hỏi</span>
+            <span onclick="toggleMobileNav()" style="cursor:pointer; display:none;" id="btn-close-nav">✕</span>
+        </div>
+        <div class="moodle-grid" id="moodle-grid"></div>
+    </div>
+</div>
+
+<button class="mobile-nav-toggle" onclick="toggleMobileNav()">📋 Bảng câu hỏi</button>
+
+<script>
+// NGÂN HÀNG CÂU HỎI ĐẦY ĐỦ 80 CÂU CHƯƠNG 1 + CÁC BẪY MOODLE KINH ĐIỂN TỪ FILE TXT
+const QUESTION_BANK = [
+    // --- CHƯƠNG 1 (TRỌN VẸN 80 CÂU THEO FILE CHUẨN) ---
+    { id: 1, ch: 1, q: "Ai chủ trì Hội nghị Ban Chấp hành Trung ương Đảng tháng 11 - 1940?", opts: ["Nguyễn Ái Quốc", "Lê Hồng Phong", "Trường Chinh", "Nguyễn Văn Cừ"], ans: 2, trap: "Hội nghị Trung ương 7 (11/1940) tại Đình Bảng do đồng chí Trường Chinh chủ trì." },
+    { id: 2, ch: 1, q: "Ai là người viết tác phẩm “Tự chỉ trích”?", opts: ["Phan Đăng Lưu", "Lê Hồng Phong", "Hà Huy Tập", "Nguyễn Văn Cừ"], ans: 3, trap: "Tác phẩm xuất bản tháng 7/1939 của Tổng Bí thư Nguyễn Văn Cừ nhằm thống nhất tư tưởng trong Đảng." },
+    { id: 3, ch: 1, q: "Ai là Tổng Bí thư đầu tiên của Đảng?", opts: ["Trần Phú", "Lê Hồng Phong", "Trần Văn Cung", "Hồ Chí Minh"], ans: 0, trap: "Đồng chí Trần Phú được bầu làm Tổng Bí thư đầu tiên tại Hội nghị Trung ương tháng 10/1930." },
+    { id: 4, ch: 1, q: "Ban chấp hành Trung ương Đảng xác định chuẩn bị khởi nghĩa vũ trang là nhiệm vụ trung tâm tại Hội nghị nào?", opts: ["Hội nghị họp tháng 11 - 1940", "Hội nghị họp tháng 10 - 1930", "Hội nghị họp tháng 11 - 1939", "Hội nghị họp tháng 5 – 1941"], ans: 3, trap: "Hội nghị Trung ương 8 (5/1941) họp tại Pác Bó đã hoàn chỉnh chuyển hướng chỉ đạo chiến lược." },
+    { id: 5, ch: 1, q: "Bản Chỉ thị Nhật, Pháp bắn nhau và hành động của chúng ta phản ánh nội dung của Hội nghị nào?", opts: ["Hội nghị Ban Thường vụ Trung ương Đảng họp tháng 2 - 1943", "Hội nghị Ban chấp hành Trung ương Đảng họp tháng 5 - 1941", "Hội nghị Ban Thường vụ Trung ương Đảng họp tháng 3 - 1945", "Hội nghị quân sự cách mạng Bắc kỳ họp tháng 4 – 1945"], ans: 2, trap: "Hội nghị Ban Thường vụ họp ngay đêm 9/3/1945 và ban hành chỉ thị lịch sử ngày 12/3/1945." },
+    { id: 6, ch: 1, q: "Ban lãnh đạo của Đảng ở nước ngoài do ai đứng đầu?", opts: ["Trường Chinh", "Lê Hồng Phong", "Nguyễn Văn Cừ", "Hà Huy Tập"], ans: 1, trap: "Ban lãnh đạo của Đảng ở nước ngoài thành lập năm 1934 tại Ma Cao do Lê Hồng Phong đứng đầu." },
+    { id: 7, ch: 1, q: "Ban Thường vụ Trung ương Đảng ra Quyết nghị chấp nhận Đông Dương cộng sản liên đoàn là một bộ phận của Đảng Cộng sản Việt Nam vào thời gian nào?", opts: ["Ngày 22 - 3 – 1930", "Ngày 20 - 2 - 1930", "Ngày 22 - 2 - 1930", "Ngày 24 - 2 - 1930"], ans: 3, trap: "Quyết nghị chấp nhận Đông Dương cộng sản liên đoàn được ký vào ngày 24/2/1930." },
+    { id: 8, ch: 1, q: "Cách mạng Tháng Tám thành công để lại cho Đảng và nhân dân Việt Nam những bài học kinh nghiệm quý báu trong những lĩnh vực gì?", opts: ["Về phương pháp cách mạng", "Về xây dựng lực lượng và xây dựng Đảng", "Về chỉ đạo chiến lược", "Cả ba đáp án đều đúng"], ans: 3, trap: "Để lại bài học sâu sắc toàn diện trên cả 3 mặt phương pháp, lực lượng và chỉ đạo." },
+    { id: 9, ch: 1, q: "Cao trào cách mạng Việt Nam năm 1930 bắt đầu bị đế quốc Pháp đàn áp khốc liệt từ khi nào?", opts: ["Đầu năm 1931", "Cuối năm 1930", "Cuối năm 1931", "Đầu năm 1930"], ans: 1, trap: "Từ cuối năm 1930, thực dân Pháp tập trung toàn bộ lực lượng khủng bố trắng phong trào." },
+    { id: 10, ch: 1, q: "Chi bộ cộng sản đầu tiên ở Việt Nam được thành lập khi nào?", opts: ["Tháng 2 năm 1929", "Tháng 3 năm 1929", "Tháng 4 năm 1929", "Tháng 5 năm 1929"], ans: 1, trap: "Thành lập cuối tháng 3/1929 tại số 5D Hàm Long, Hà Nội." },
+    { id: 11, ch: 1, q: "Chỉ thị “Nhật - Pháp bắn nhau và hành động của chúng ta” ra đời khi nào?", opts: ["Ngày 12 - 3 - 1945", "Ngày 12 - 3 – 1946", "Ngày 10 - 3 - 1846", "Ngày 9 - 3 - 1945"], ans: 0, trap: "Chỉ thị ký ngày 12/3/1945 (sau ngày Nhật đảo chính 9/3/1945 đúng 3 ngày)." },
+    { id: 12, ch: 1, q: "Chiến tranh thế giới II bùng nổ vào thời gian nào?", opts: ["1937", "1940", "1938", "1939"], ans: 3, trap: "Chiến tranh bùng nổ ngày 1/9/1939 khi phát xít Đức tấn công Ba Lan." },
+    { id: 13, ch: 1, q: "Chính quyền Xô viết ở một số vùng nông thôn Nghệ - Tĩnh được thành lập trong khoảng thời gian nào?", opts: ["Đầu năm 1931", "Cuối năm 1930", "Cuối năm 1931", "Đầu năm 1930"], ans: 1, trap: "Chính quyền Xô viết ra đời từ tháng 9/1930 (cuối năm 1930)." },
+    { id: 14, ch: 1, q: "Cho biết đối tượng của cách mạng trong giai đoạn 1936 - 1939", opts: ["Địa chủ phong kiến.", "Một bộ phận đế quốc xâm lược và tay sai.", "Bọn đế quốc xâm lược.", "Đế quốc và phong kiến."], ans: 1, trap: "Không đánh đổ toàn bộ đế quốc mà chỉ chĩa mũi nhọn vào bọn phản động thuộc địa và tay sai." },
+    { id: 15, ch: 1, q: "Chủ trương điều chỉnh chiến lược cách mạng của Đảng được bắt đầu từ Hội nghị Trung ương nào?", opts: ["Hội nghị Trung ương 8", "Hội nghị Trung ương 7", "Hội nghị Trung ương 6", "Hội nghị Trung ương 9"], ans: 2, trap: "Mở đầu chuyển hướng từ Hội nghị TW 6 (11/1939 tại Bà Điểm) và hoàn chỉnh ở TW 8." },
+    { id: 16, ch: 1, q: "Cuộc khởi nghĩa Bắc Sơn nổ ra ngày nào?", opts: ["Ngày 22 - 9 - 1940", "Ngày 23 - 11 - 1940", "Ngày 20 - 11 – 1940", "Ngày 27 - 9 - 1940"], ans: 3, trap: "Khởi nghĩa Bắc Sơn nổ ra ngày 27/9/1940, thành lập đội du kích Bắc Sơn." },
+    { id: 17, ch: 1, q: "Cương lĩnh chính trị đầu tiên của Đảng khẳng định phương pháp tiến hành cách mạng giải phóng dân tộc là?", opts: ["Đấu tranh theo xu hướng cải cách", "Đấu tranh theo xu hướng bạo động", "Đấu tranh vũ trang theo lối manh động, ám sát cá nhân", "Đấu tranh theo phương pháp bạo lực cách mạng của quần chúng"], ans: 3, trap: "Cương lĩnh nêu rõ con đường giải phóng là dùng bạo lực cách mạng của quần chúng." },
+    { id: 18, ch: 1, q: "Cương lĩnh đầu tiên của Đảng đã xác định mục tiêu chiến lược của cách mạng Việt Nam là gì?", opts: ["Cách mạng tư sản dân quyền - phản đế và điền địa...", "Cả a và b.", "Xây dựng một nước Việt Nam dân giầu nước mạnh...", "Làm tư sản dân quyền cách mạng và thổ địa cách mạng để đi tới xã hội cộng sản."], ans: 3, trap: "Đúng nguyên văn: Làm tư sản dân quyền cách mạng và thổ địa cách mạng để đi tới xã hội cộng sản." },
+    { id: 19, ch: 1, q: "Dưới chế độ thực dân phong kiến, giai cấp nông dân Việt Nam có yêu cầu bức thiết nhất là gì?", opts: ["Quyền bình đẳng nam, nữ", "Được giảm tô, giảm tức", "Ruộng đất", "Độc lập dân tộc"], ans: 3, trap: "Mất nước thì mất tất cả nên yêu cầu bức thiết nhất của nông dân thuộc địa là Độc lập dân tộc." },
+    { id: 20, ch: 1, q: "Đặc điểm ra đời của giai cấp công nhân Việt Nam như thế nào?", opts: ["Ra đời trước giai cấp tư sản, trong cuộc khai thác thuộc địa lần thứ nhất của Pháp.", "Phần lớn xuất thân từ nông dân.", "Chịu sự áp bức và bóc lột của đế quốc, phong kiến và tư sản", "Cả a, b, c"], ans: 3, trap: "Hội tụ đầy đủ cả 3 đặc điểm lịch sử đặc thù của công nhân Việt Nam." },
+    { id: 21, ch: 1, q: "Đại biểu các tổ chức cộng sản nào đã tham dự Hội nghị thành lập Đảng đầu năm 1930?", opts: ["Đông Dương cộng sản Đảng và An Nam cộng sản Đảng", "An Nam cộng sản Đảng và Đông Dương cộng sản liên đoàn", "Đông Dương cộng sản Đảng và Đông Dương cộng sản liên đoàn", "Đông Dương cộng sản Đảng, An Nam cộng sản Đảng và Đông Dương cộng sản liên đoàn"], ans: 0, trap: "Chỉ có 2 tổ chức là Đông Dương CSĐ và An Nam CSĐ tham dự Hội nghị hợp nhất tại Hương Cảng." },
+    { id: 22, ch: 1, q: "Đáp án nào dưới đây không phải là tên các tổ chức cộng sản ra đời vào nửa cuối năm 1929 tại Việt Nam?", opts: ["Đông Dương Cộng sản Đảng", "An Nam Cộng sản Đảng", "An Nam Cộng sản Liên đoàn", "Đông Dương Cộng sản Liên đoàn"], ans: 2, trap: "Không có tổ chức nào tên là An Nam Cộng sản Liên đoàn." },
+    { id: 23, ch: 1, q: "Đâu không phải là hạn chế của Luận cương chính trị tháng 10/1930?", opts: ["Không đề ra được một chiến lược liên minh dân tộc và giai cấp rộng rãi", "Không nhấn mạnh nhiệm vụ giải phóng dân tộc, mà nặng về đấu tranh giai cấp", "Chưa đưa ra được phương pháp cách mạng là con đường “võ trang bạo động”", "Không nêu rõ mâu thuẫn chủ yếu của xã hội Việt Nam thuộc địa"], ans: 2, trap: "Luận cương 10/1930 đã khẳng định phương pháp cách mạng là võ trang bạo động nên đây không phải hạn chế." },
+    { id: 24, ch: 1, q: "Đâu không phải là ý nghĩa của Cách mạng Tháng Tám năm 1945?", opts: ["Nhân dân Việt Nam vươn lên cùng các dân tộc...", "Thắng lợi của Cách mạng Tháng Tám mở ra kỷ nguyên mới... bước vào giai đoạn chủ nghĩa tư bản và tiến tới chủ nghĩa xã hội.", "Với thắng lợi... từ thân phận nô lệ bước lên địa vị người chủ...", "Đã đập tan xiềng xích nô lệ của chủ nghĩa đế quốc..."], ans: 1, trap: "CMT8 bỏ qua giai đoạn TBCN để tiến thẳng lên CNXH chứ không bước vào giai đoạn TBCN." },
+    { id: 25, ch: 1, q: "Đâu là cuốn sách chính trị đầu tiên của cách mạng Việt Nam?", opts: ["Nhân đạo", "Đời sống công nhân", "Đường cách mệnh", "Người cùng khổ"], ans: 2, trap: "Đường cách mệnh xuất bản năm 1927 tập hợp các bài giảng của Nguyễn Ái Quốc." },
+    { id: 26, ch: 1, q: "Đâu là nguyên nhân thất bại của các phong trào yêu nước của nhân dân Việt Nam trước khi có Đảng:", opts: ["Chưa có một tổ chức vững mạnh...", "Chưa xác định được phương pháp đấu tranh thích hợp...", "Cả ba đáp án đều đúng", "Thiếu đường lối chính trị đúng đắn..."], ans: 2, trap: "Thất bại do khủng hoảng về cả đường lối, giai cấp lãnh đạo và phương pháp tổ chức." },
+    { id: 27, ch: 1, q: "Điều kiện nào tạo ra khả năng đấu tranh công khai hợp pháp cho phong trào cách mạng Đông Dương giai đoạn 1936 - 1939?", opts: ["Mặt trận nhân dân Pháp lên cầm quyền", "Tất cả các điều kiện trên", "Chủ trương chuyển hướng chiến lược cách mạng thế giới của Quốc tế Cộng sản", "Sự xuất hiện chủ nghĩa phát xít và nguy cơ chiến tranh thế giới"], ans: 0, trap: "⚠️ BẪY MOODLE: Không chọn 'Tất cả các điều kiện trên'. Hệ thống Moodle cài đặt đáp án đúng là Mặt trận nhân dân Pháp lên cầm quyền." },
+    { id: 28, ch: 1, q: "Đội Việt Nam tuyên truyền giải phóng quân lúc đầu được thành lập có bao nhiêu chiến sĩ?", opts: ["36", "35", "33", "34"], ans: 3, trap: "Thành lập ngày 22/12/1944 ban đầu gồm 34 chiến sĩ (3 nữ, 31 nam)." },
+    { id: 29, ch: 1, q: "Đông Dương Cộng sản Đảng và An nam Cộng sản Đảng được ra đời từ tổ chức tiền thân nào?", opts: ["Hội Việt Nam cách mạng Thanh niên", "Tân Việt cách mạng Đảng", "Việt Nam cách mạng đồng chí Hội", "Các nội dung đều đúng"], ans: 0, trap: "Cả hai đều phân hóa ra từ tổ chức Hội Việt Nam Cách mạng Thanh niên." },
+    { id: 30, ch: 1, q: "Được sự chỉ đạo của Quốc tế Cộng sản, ban lãnh đạo của Đảng ở nước ngoài được thành lập vào năm nào?", opts: ["Năm 1932", "Năm 1935", "Năm 1933", "Năm 1934"], ans: 3, trap: "Thành lập năm 1934 tại Ma Cao để chỉ đạo khôi phục phong trào cách mạng trong nước." },
+    { id: 31, ch: 1, q: "Hình thức tổ chức và đấu tranh trong giai đoạn 1936 - 1939?", opts: ["Tất cả các hình thức trên.", "Công khai, hợp pháp.", "Nửa công khai, nửa hợp pháp.", "Bí mật, bất hợp pháp."], ans: 0, trap: "Kết hợp linh hoạt cả công khai, nửa công khai, hợp pháp và bí mật bất hợp pháp." },
+    { id: 32, ch: 1, q: "Hội Liên hiệp thuộc địa được thành lập vào năm nào?", opts: ["1923", "1921", "1924", "1920"], ans: 1, trap: "Nguyễn Ái Quốc cùng các nhà hoạt động yêu nước thành lập tại Paris năm 1921." },
+    { id: 33, ch: 1, q: "Hội nghị Ban chấp hành Trung ương Đảng họp tháng 7 - 1936 chủ trương thành lập mặt trận nào?", opts: ["Mặt trận dân tộc thống nhất phản đế Đông Dương.", "Mặt trận nhân dân phản đế Đông Dương", "Mặt trận dân chủ Đông Dương.", "Mặt trận phản đế đồng minh Đông Dương."], ans: 1, trap: "Tháng 7/1936 thành lập Mặt trận nhân dân phản đế, đến tháng 3/1938 mới đổi thành Mặt trận Dân chủ Đông Dương." },
+    { id: 34, ch: 1, q: "Hội nghị Hợp nhất thành lập Đảng CSVN (3 - 2 - 1930) thông qua các văn kiện nào sau đây:", opts: ["Cả  3 đáp án trên", "Chánh cương vắn tắt", "Điều lệ vắn tắt và Chương trình vắn tắt", "Sách lược vắn tắt"], ans: 0, trap: "Thông qua toàn bộ hệ thống văn kiện Cương lĩnh đầu tiên do Nguyễn Ái Quốc soạn thảo." },
+    { id: 35, ch: 1, q: "Hội nghị lần thứ nhất Ban chấp hành Trung ương 10 - 1930 do ai chủ trì?", opts: ["Hồ Chí Minh", "Trần Phú", "Lê Duẩn", "Trường Chinh"], ans: 1, trap: "Đồng chí Trần Phú chủ trì tại Hương Cảng và được bầu làm Tổng Bí thư." },
+    { id: 36, ch: 1, q: "Hội nghị lần thứ Tám của Ban chấp hành Trung ương Đảng (5 - 1941) cử ai làm Tổng bí thư?", opts: ["Võ Văn Tần", "Lê Duẩn", "Trường Chinh", "Nguyễn Ái Quốc"], ans: 2, trap: "Hội nghị Trung ương 8 bầu đồng chí Trường Chinh làm Tổng Bí thư." },
+    { id: 37, ch: 1, q: "Hội nghị nào của Ban chấp hành Trung ương Đảng chủ trương tạm gác các khẩu hiệu “độc lập dân tộc” và “cách mạng ruộng đất”", opts: ["Hội nghị họp tháng 11 - 1939", "Hội nghị họp tháng 5 – 1941", "Hội nghị họp tháng 10 - 1930", "Hội nghị họp tháng 7 - 1936"], ans: 3, trap: "Hội nghị tháng 7/1936 tại Thượng Hải do Lê Hồng Phong chủ trì tạm gác 2 khẩu hiệu chiến lược này." },
+    { id: 38, ch: 1, q: "Hội nghị nào của Ban chấp hành Trung ương Đảng nhấn mạnh giải phóng dân tộc là nhiệm vụ bức thiết nhất?", opts: ["Hội nghị họp tháng 11 - 1939", "Hội nghị họp tháng 5 – 1941", "Hội nghị họp tháng 10 - 1930", "Hội nghị họp tháng 11 - 1940"], ans: 1, trap: "HNTW 8 (5/1941) nhấn mạnh nếu không giải phóng dân tộc thì quyền lợi bộ phận đến vạn năm cũng không đòi lại được." },
+    { id: 39, ch: 1, q: "Hội nghị nào đã quyết định phát động toàn dân nổi dậy tổng khởi nghĩa giành chính quyền?", opts: ["Hội nghị Tổng bộ Việt Minh", "Hội nghị Ban chấp hành Trung ương Đảng", "Hội nghị Ban thường vụ Trung ương Đảng", "Hội nghị toàn quốc của Đảng"], ans: 3, trap: "Hội nghị toàn quốc của Đảng họp tại Tân Trào (13 - 15/8/1945) quyết định phát động Tổng khởi nghĩa." },
+    { id: 40, ch: 1, q: "Hội nghị toàn quốc của Đảng Cộng sản Đông Dương họp ở Tân Trào trong thời gian nào?", opts: ["13 - 15 tháng 8 - 1945", "21 - 23 tháng 8 – 1945", "15 - 19 tháng 8 - 1945", "15 - 19 tháng 8 - 1941"], ans: 0, trap: "Họp từ ngày 13 đến 15/8/1945 trước khi Quốc dân Đại hội khai mạc." },
+    { id: 41, ch: 1, q: "Hội nghị Trung ương 6 (11 - 1939) họp tại đâu?", opts: ["Thái Nguyên", "Đình Bảng (Bắc Ninh)", "Tân Trào (Tuyên Quang)", "Bà Điểm (Gia Định)"], ans: 3, trap: "Họp tại Bà Điểm (Hóc Môn, Gia Định) do Tổng Bí thư Nguyễn Văn Cừ chủ trì." },
+    { id: 42, ch: 1, q: "Hội nghị Trung ương lần thứ 7 của Đảng họp tại Đình Bảng (Bắc Ninh) vào thời gian nào?", opts: ["Tháng 11 - 1940", "Tháng 11 - 1939", "Tháng 4 – 1941", "Tháng 5 - 1941"], ans: 0, trap: "Họp vào tháng 11/1940 quyết định duy trì đội du kích Bắc Sơn." },
+    { id: 43, ch: 1, q: "Hội Việt Nam Cách mạng Thanh niên thực hiện chủ trương “vô sản hoá” khi nào?", opts: ["Cuối năm 1929 đầu năm 1930", "Cuối năm 1928 đầu năm 1929", "Cuối năm 1927 đầu năm 1928", "Cuối năm 1926 đầu năm 1927"], ans: 1, trap: "Chủ trương vô sản hóa được phát động và thực hiện từ cuối 1928 đầu 1929." },
+    { id: 44, ch: 1, q: "Khẩu hiệu nào sau được nêu ra trong Cao trào kháng Nhật cứu nước?", opts: ["Đánh đuổi phát xít Nhật - Pháp", "Đánh đuổi phát xít Nhật", "Giải quyết nạn đói", "Chống nhổ lúa trồng đay"], ans: 0, trap: "⚠️ BẪY MOODLE: Chọn 'Đánh đuổi phát xít Nhật' bị hệ thống chấm sai. Đáp án cài sẵn của trường là: Đánh đuổi phát xít Nhật - Pháp." },
+    { id: 45, ch: 1, q: "Khi nào phong trào công nhân Việt Nam hoàn toàn trở thành một phong trào tự giác?", opts: ["Năm 1925 (cuộc bãi công Ba Son)", "Năm 1920 (tổ chức công hội được thành lập)", "Năm 1930 (Đảng Cộng sản Việt Nam ra đời)", "Năm 1929 (sự ra đời ba tổ chức cộng sản)"], ans: 2, trap: "Phong trào chỉ hoàn toàn chuyển từ tự phát sang tự giác khi có Đảng tiên phong lãnh đạo (năm 1930)." },
+    { id: 46, ch: 1, q: "Luận cương Chính trị do đồng chí Trần Phú khởi thảo ra đời vào thời gian nào?", opts: ["Tháng 8 – 1930", "Tháng 2 - 1930", "Tháng 10 - 1930", "Tháng 9 - 1930"], ans: 2, trap: "Được thông qua tại Hội nghị Trung ương lần thứ nhất tháng 10/1930 tại Hương Cảng." },
+    { id: 47, ch: 1, q: "Lý do Nguyễn Ái Quốc đã triệu tập và chủ trì Hội nghị thành lập Đảng đầu năm 1930?", opts: ["Sự chủ động của Nguyễn Ái Quốc", "Nhận được chỉ thị của Quốc tế Cộng sản", "Được sự uỷ nhiệm của Quốc tế Cộng sản", "Các tổ chức cộng sản trong nước đề nghị"], ans: 0, trap: "Với tư cách phái viên Quốc tế Cộng sản và trách nhiệm với vận mệnh dân tộc, Người đã chủ động triệu tập." },
+    { id: 48, ch: 1, q: "Mặt trận Việt Nam độc lập đồng minh (Việt Minh) được thành lập năm nào?", opts: ["1942", "1941", "1940", "1943"], ans: 1, trap: "Thành lập theo quyết định của HNTW 8 ngày 19/5/1941 tại Pác Bó." },
+    { id: 49, ch: 1, q: "Mâu thuẫn cơ bản và chủ yếu ở Việt Nam đầu thế kỷ XX là mâu thuẫn nào?", opts: ["Mâu thuẫn giữa dân tộc Việt Nam với đế quốc xâm lược và tay sai của chúng", "Mâu thuẫn giữa giai cấp công nhân với giai cấp tư sản", "Mâu thuẫn giữa giai cấp nông dân với giai cấp địa chủ phong kiến", "Mâu thuẫn giữa công nhân và nông dân với đế quốc và phong kiến"], ans: 0, trap: "Mâu thuẫn chủ yếu nhất của xã hội thuộc địa nửa phong kiến là toàn thể dân tộc với đế quốc và tay sai." },
+    { id: 50, ch: 1, q: "Mục tiêu cụ thể trước mắt của cao trào cách mạng 1936 - 1939 là gì?", opts: ["Các quyền dân chủ đơn sơ.", "Độc lập dân tộc.", "Tất cả các mục tiêu trên.", "Ruộng đất cho dân cày."], ans: 0, trap: "Đòi các quyền tự do dân chủ cơm áo hòa bình gọi chung là các quyền dân chủ đơn sơ." },
+    { id: 51, ch: 1, q: "Ngày Nam Kỳ khởi nghĩa là ngày nào?", opts: ["Ngày 10 - 1 – 1941", "Ngày 27 - 9 - 1940", "Ngày 23 - 11 - 1940", "Ngày 13 - 1 - 1941"], ans: 2, trap: "Bùng nổ đêm ngày 23/11/1940 tại khắp các tỉnh Nam Bộ." },
+    { id: 52, ch: 1, q: "Nguyễn Ái Quốc đã đọc Sơ thảo lần thứ nhất Luận cương về vấn đề dân tộc và thuộc địa khi nào? ở đâu?", opts: ["7 - 1920 - Liên Xô", "7 - 1920 - Quảng Châu (Trung Quốc)", "8 - 1920 - Trung Quốc", "7 - 1920 - Pháp"], ans: 3, trap: "Người đọc bản Luận cương của Lênin trên báo L'Humanité tháng 7/1920 tại Paris (Pháp)." },
+    { id: 53, ch: 1, q: "Nguyễn Ái Quốc khẳng định con đường cách mạng của các dân tộc bị áp bức là:", opts: ["giải phóng giai cấp, giải phóng dân tộc", "giải phóng giai cấp vô sản ở “chính quốc”", "chỉ cần giải phóng giai cấp, không cần giải phóng dân tộc", "chỉ cần giải phóng dân tộc, không cần giải phóng giai cấp"], ans: 0, trap: "Con đường cách mạng phải kết hợp chặt chẽ giải phóng dân tộc với giải phóng giai cấp." },
+    { id: 54, ch: 1, q: "Nguyễn Ái Quốc từ Liên Xô về Quảng Châu (Trung Quốc) vào thời gian nào?", opts: ["Tháng 12 năm 1924", "Tháng 12 năm 1925", "Tháng 11 năm 1924", "Tháng 10 năm 1924"], ans: 2, trap: "Người về tới Quảng Châu vào ngày 11/11/1924 (tháng 11 năm 1924)." },
+    { id: 55, ch: 1, q: "Nguyên nhân chủ yếu và có ý nghĩa quyết định sự bùng nổ và phát triển của cao trào cách mạng 1930?", opts: ["Chính sách khủng bố trắng của Pháp", "Chính sách tăng cường vơ vét bóc lột của Pháp", "Sự lãnh đạo của Đảng Cộng sản Việt Nam", "Tác động tiêu cực của cuộc khủng hoảng kinh tế 1929 - 1933"], ans: 2, trap: "Nhân tố quyết định đưa phong trào bùng nổ đỉnh cao là có Đảng ra đời trực tiếp lãnh đạo." },
+    { id: 56, ch: 1, q: "Nhân dân ta phải tiến hành tổng khởi nghĩa giành chính quyền trước khi quân Đồng minh vào Đông Dương vì:", opts: ["Đó là lúc kẻ thù cũ đã ngã gục nhưng kẻ thù mới chưa kịp đến", "Tất cả các lý do trên", "Đó là lúc so sánh lực lượng có lợi nhất đối với cách mạng", "Quân Đồng minh có thể dựng ra một chính quyền trái với ý chí và nguyện vọng của nhân dân ta"], ans: 1, trap: "Bao gồm toàn bộ thời cơ vàng ngàn năm có một trước khi quân Tưởng và quân Anh kéo vào." },
+    { id: 57, ch: 1, q: "Phát xít Nhật vào xâm lược nước ta tháng, năm nào?", opts: ["Tháng 3 - 1941", "Tháng 9 - 1939", "Tháng 2 – 1940", "Tháng 9 - 1940"], ans: 3, trap: "Quân Nhật đổ bộ vào Lạng Sơn tháng 9/1940, đặt dân tộc ta dưới cảnh 1 cổ 2 tròng." },
+    { id: 58, ch: 1, q: "Quốc dân Đại hội Tân trào họp tháng 8 - 1945 ở huyện nào?", opts: ["Chiêm Hoá (Tuyên Quang)", "Định hoá (Thái nguyên)", "Đại Từ (Thái Nguyên)", "Sơn Dương (Tuyên Quang)"], ans: 3, trap: "Đình Tân Trào thuộc huyện Sơn Dương, tỉnh Tuyên Quang." },
+    { id: 59, ch: 1, q: "Quốc dân Đại hội Tân trào tháng 8 - 1945 đã không quyết định những nội dung nào dưới đây:", opts: ["10 Chính sách của Việt Minh.", "Quyết định thành lập Uỷ ban giải phóng dân tộc...", "Quyết định thành lập Uỷ ban giải phóng ở Hà Nội.", "Quyết định Tổng khởi nghĩa"], ans: 2, trap: "Đại hội thành lập Ủy ban dân tộc giải phóng Việt Nam (Chính phủ lâm thời) chứ không lập Ủy ban giải phóng ở Hà Nội." },
+    { id: 60, ch: 1, q: "Quốc tế Cộng sản họp Đại hội lần thứ 7 ở đâu? khi nào?", opts: ["Tháng 7 năm 1935, ở Béc lin.", "Tháng 7 năm 1935, ở Luân Đôn", "Tháng 7 năm 1935, ở Pa ri", "Tháng 7 năm 1935, ở Matxcơva"], ans: 3, trap: "Đại hội VII Quốc tế Cộng sản diễn ra tháng 7/1935 tại thủ đô Mát-xcơ-va (Liên Xô)." },
+    { id: 61, ch: 1, q: "Sau Hội nghị thành lập Đảng, Ban chấp hành Trung ương lâm thời của Đảng được thành lập do ai đứng đầu?", opts: ["Hà Huy Tập", "Lê Hồng Phong", "Trần Phú", "Trịnh Đình Cửu"], ans: 3, trap: "Đồng chí Trịnh Đình Cửu đứng đầu Ban Chấp hành Trung ương lâm thời." },
+    { id: 62, ch: 1, q: "Sự kiện nào được Nguyễn Ái Quốc đánh giá “như chim én nhỏ báo hiệu mùa Xuân”?", opts: ["Sự thành lập Đảng Cộng sản Pháp", "Vụ mưu sát tên toàn quyền Méclanh của Phạm Hồng Thái", "Sự thành lập Hội Việt Nam cách mạng thanh niên", "Cách mạng tháng Mười Nga bùng nổ"], ans: 1, trap: "Tiếng bom Sa Diện ám sát Méclanh tại Quảng Châu của Phạm Hồng Thái (6/1924)." },
+    { id: 63, ch: 1, q: "Tại sao Cách mạng Tháng Tám năm 1945 là một cuộc cách mạng giải phóng dân tộc điển hình?", opts: ["Thành lập chính quyền nhà nước “của chung toàn dân tộc”", "Lực lượng cách mạng bao gồm toàn dân tộc", "Tập trung hoàn thành nhiệm vụ hàng đầu của cách mạng là giải phóng dân tộc", "Cả ba đáp án đều đúng"], ans: 3, trap: "Thể hiện điển hình từ mục tiêu số 1, lực lượng tham gia cho tới tính chất chính quyền cách mạng." },
+    { id: 64, ch: 1, q: "Tên của lực lượng vũ trang được thành lập ở Nghệ Tĩnh trong cao trào cách mạng năm 1930 là gì?", opts: ["Tự vệ chiến đấu", "Tự vệ đỏ", "Tự vệ", "Du kích"], ans: 1, trap: "Lực lượng bán vũ trang bảo vệ chính quyền Xô viết Nghệ - Tĩnh mang tên Tự vệ đỏ." },
+    { id: 65, ch: 1, q: "Thời gian thực dân Pháp tiến hành khai thác thuộc địa lần thứ nhất ở Việt Nam khi nào?", opts: ["1884 - 1896", "1914 – 1918", "1897 - 1914", "1858 - 1884"], ans: 2, trap: "Cuộc khai thác thuộc địa lần 1 do Toàn quyền Paul Doumer chỉ đạo diễn ra từ 1897 đến 1914." },
+    { id: 66, ch: 1, q: "Tổ chức An Nam Cộng sản Đảng được thành lập vào thời gian nào?", opts: ["Tháng 6 - 1927", "Tháng 6 - 1928", "Tháng 11 - 1929", "Tháng 7 – 1929"], ans: 2, trap: "⚠️ BẪY MOODLE: Không chọn tháng 7 – 1929. Đáp án chính xác được hệ thống chấp nhận là Tháng 11 - 1929." },
+    { id: 67, ch: 1, q: "Tổ chức cộng sản nào ra đời đầu tiên ở Việt Nam?", opts: ["Hội Việt Nam cách mạng thanh niên", "Đông Dương cộng sản Đảng", "An Nam cộng sản Đảng", "Đông Dương cộng sản liên đoàn"], ans: 1, trap: "Đông Dương Cộng sản Đảng thành lập ngày 17/6/1929 tại số 312 Khâm Thiên, Hà Nội." },
+    { id: 68, ch: 1, q: "Tổ chức Đông Dương Cộng sản Đảng được thành lập vào thời gian nào?", opts: ["Tháng 5 – 1929", "Tháng 6 - 1929", "Tháng 6 - 1927", "Tháng 6 - 1928"], ans: 1, trap: "Chính thức thành lập vào ngày 17 tháng 6 năm 1929." },
+    { id: 69, ch: 1, q: "Tổ chức Đông Dương Cộng sản liên Đoàn được thành lập vào thời gian nào?", opts: ["Tháng 9 - 1929", "Tháng 7 - 1927", "Tháng 3 – 1930", "Tháng 2 - 1930"], ans: 0, trap: "Được thành lập từ sự phân hóa của Tân Việt Cách mạng Đảng vào tháng 9/1929." },
+    { id: 70, ch: 1, q: "Tổ chức nào triệu tập Đại hội quốc dân họp tại Tân Trào?", opts: ["Ban Thường vụ Trung ương Đảng", "Uỷ ban khỏi nghĩa", "Ban chấp hành Trung ương Đảng", "Tổng bộ Việt Minh"], ans: 3, trap: "Quốc dân Đại hội Tân Trào do Tổng bộ Việt Minh chính thức triệu tập ngày 16/8/1945." },
+    { id: 71, ch: 1, q: "Tổng bộ Việt Minh ra chỉ thị “Sửa soạn khởi nghĩa” vào thời gian nào?", opts: ["Tháng 8 - 1945", "Tháng 6 – 1945", "Tháng 3 - 1945", "Tháng 5 - 1944"], ans: 3, trap: "Chỉ thị 'Sửa soạn khởi nghĩa' được Tổng bộ Việt Minh phát đi vào tháng 5/1944." },
+    { id: 72, ch: 1, q: "Trong bối cảnh tình hình thế giới, nhân tố nào tác động sâu sắc nhất tới phong trào giải phóng dân tộc ở Việt Nam?", opts: ["Chủ nghĩa tư bản phương Tây chuyển sang giai đoạn độc quyền", "Chủ nghĩa tư bản chuyển sang tự do cạnh tranh", "Thắng lợi của Cách mạng Tháng Mười Nga", "Phong trào giải phóng dân tộc trên toàn thế giới"], ans: 2, trap: "CM Tháng Mười Nga 1917 đã mở ra thời đại mới và soi đường cho cách mạng VN." },
+    { id: 73, ch: 1, q: "Trong các điểm sau, chỉ rõ điểm khác nhau giữa Cương lĩnh chính trị đầu tiên của Đảng và Luận cương chính trị tháng 10 - 1930 là:", opts: ["Vai trò lãnh đạo cách mạng.", "Phương pháp cách mạng.", "Phương hướng chiến lược của cách mạng.", "Chủ trương tập hợp lực lượng cách mạng."], ans: 3, trap: "Cương lĩnh chủ trương đại đoàn kết toàn dân, còn Luận cương chỉ nhấn mạnh công nông." },
+    { id: 74, ch: 1, q: "Trong cao trào dân chủ 1936 - 1939 Đảng chủ trương tập hợp những lực lượng nào nào?", opts: ["Cả dân tộc Việt Nam.", "Mọi lực lượng dân tộc và một bộ phận người Pháp ở Đông Dương.", "Công nhân và nông dân.", "Công nhân, nông dân, tiểu tư sản, địa chủ"], ans: 1, trap: "Tập hợp rộng rãi mọi lực lượng dân chủ tiến bộ, kể cả người Pháp có xu hướng chống phát xít." },
+    { id: 75, ch: 1, q: "Trong cao trào kháng Nhật cứu nước, phong trào “Phá kho thóc của Nhật để giải quyết nạn đói” đã diễn ra mạnh mẽ ở đâu?", opts: ["Đồng bằng Bắc Bộ và Bắc Trung Bộ", "Đồng bằng Bắc Bộ", "Đồng bằng Nam Bộ", "Đồng bằng Trung Bộ"], ans: 0, trap: "Nơi nạn đói diễn ra thảm khốc nhất là các tỉnh Đồng bằng Bắc Bộ và Bắc Trung Bộ." },
+    { id: 76, ch: 1, q: "Trong đợt khai thác thuộc địa lần thứ nhất của thực dân Pháp ở nước ta có giai cấp mới nào được hình thành?", opts: ["Giai cấp tư sản và công nhân", "Giai cấp tư sản", "Giai cấp tiểu tư sản", "Giai cấp công nhân"], ans: 3, trap: "Giai cấp công nhân Việt Nam ra đời ngay từ cuộc khai thác thuộc địa lần 1 (trước tư sản)." },
+    { id: 77, ch: 1, q: "Uỷ ban dân tộc giải phóng do ai làm chủ tịch?", opts: ["Trường Chinh", "Phạm Văn Đồng", "Võ Nguyên Giáp", "Hồ Chí Minh"], ans: 3, trap: "Quốc dân Đại hội Tân Trào bầu Chủ tịch Hồ Chí Minh đứng đầu Ủy ban dân tộc giải phóng." },
+    { id: 78, ch: 1, q: "Văn kiện nào của Đảng đặt nhiệm vụ chống đế quốc lên hàng đầu?", opts: ["Luận cương chính trị tháng 10 - 1930...", "Thư của Trung ương gửi cho các cấp đảng bộ (12 - 1930)", "Nghị quyết Đại hội lần thứ nhất của Đảng (3 - 1935)", "Chính cương vắn tắt, Sách lược vắn tắt do Hội nghị thành lập Đảng thông qua"], ans: 3, trap: "Cương lĩnh đầu tiên (2/1930) của Nguyễn Ái Quốc giương cao ngọn cờ giải phóng dân tộc lên hàng đầu." },
+    { id: 79, ch: 1, q: "Văn kiện nào của Đảng nhấn mạnh “vấn đề thổ địa là cái cốt của cách mạng tư sản dân quyền”?", opts: ["Luận cương chính trị tháng 10 - 1930.", "Chính cương vắn tắt, Sách lược vắn tắt.", "Chỉ thị thành lập Hội phản đế đồng minh (18 - 11 - 1930).", "Chung quanh vấn đề chiến sách mới của Đảng (10 - 1936)."], ans: 0, trap: "Luận cương do Trần Phú soạn thảo coi thổ địa là cái cốt của cách mạng tư sản dân quyền." },
+    { id: 80, ch: 1, q: "Việt Nam Tuyên truyền giải phóng quân được thành lập khi nào?", opts: ["Ngày 10 - 5 – 1945", "Ngày 22 - 12 - 1944", "Ngày 15 - 5 - 1945", "Ngày 19 - 12 - 1946"], ans: 1, trap: "Ngày 22 tháng 12 năm 1944 (ngày thành lập Quân đội nhân dân Việt Nam)." },
+
+    // --- CÁC CÂU BẪY MOODLE ĐẶC SẮC CHƯƠNG 2 & 3 ---
+    { id: 101, ch: 2, isTrap: true, q: "Đầu năm 1948, TW Đảng đã đề ra cách thức thực hiện cách mạng ruộng đất theo đường lối riêng biệt của cách mạng Việt Nam, đó là:", opts: ["Sửa đổi chế độ ruộng đất trong phạm vi không có hại cho nông dân.", "Cải cách từng bước để dần dần thu hẹp phạm vi bóc lột của địa chủ", "Cải cách ruộng đất", "Cả ba phương án trên"], ans: 3, trap: "⚠️ BẪY MOODLE: Nhất định phải khoanh (d) 'Cả ba phương án trên' mới được hệ thống chấm điểm!" },
+    { id: 102, ch: 2, isTrap: true, q: "Kẻ thù chính của cách mạng Việt Nam ngay sau Cách mạng 8 - 1945?", opts: ["Tưởng Giới Thạch và tay sai", "Thực dân Anh xâm lược", "Giặc đói và giặc dốt.", "Thực dân Pháp xâm lược."], ans: 2, trap: "⚠️ BẪY MOODLE: Chọn Pháp sẽ bị báo sai! Đáp án của trường là: Giặc đói và giặc dốt." },
+    { id: 103, ch: 2, isTrap: true, q: "Hội nghị Ban thường vụ Trung Đảng họp mở rộng quyết định phát động cuộc kháng chiến toàn quốc họp vào thời gian nào?", opts: ["Ngày 18 - 12 - 1946", "Ngày 22 - 12 – 1946", "Ngày 19 - 12 - 1946", "Ngày 20 - 12 - 1946"], ans: 2, trap: "⚠️ BẪY MOODLE: Sinh viên hay nhầm ngày 18. Moodle chỉ chấm đúng đáp án: Ngày 19 - 12 - 1946." },
+    { id: 104, ch: 3, isTrap: true, q: "Cương lĩnh năm 1991 đã xác định mô hình xã hội xã hội chủ nghĩa mà nhân dân ta xây dựng có mấy đặc trưng?", opts: ["5", "7", "8", "6"], ans: 2, trap: "⚠️ BẪY MOODLE: Lý thuyết có 6, nhưng đề Moodle của trường cài đáp án đúng là 8. Phải chọn 8!" },
+    { id: 105, ch: 3, isTrap: true, q: "Việt Nam chính thức được kết nạp là thành viên thứ 150 của WTO vào thời gian nào?", opts: ["Tháng 12 – 2005", "Tháng 11 – 2005", "Tháng 12 – 2006", "Tháng 11 – 2006"], ans: 3, trap: "⚠️ BẪY MOODLE: Không chọn năm 2005. Lễ kết nạp diễn ra vào Tháng 11 – 2006 (7/11/2006)." }
+];
+
+let currentMode = 'ch1';
+let activeQuestions = [];
+let userState = {}; // { qId: { selected: 0, isCorrect: true } }
+let timerInterval = null;
+let timeLeft = 0;
+
+function initApp() {
+    loadMode('ch1');
+}
+
+function loadMode(mode, btnEl) {
+    currentMode = mode;
+    stopTimer();
+    document.getElementById('timer-box').style.display = 'none';
+
+    if (btnEl) {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+
+    if (mode === 'ch1') {
+        activeQuestions = QUESTION_BANK.filter(q => q.ch === 1);
+    } else if (mode === 'ch2') {
+        activeQuestions = QUESTION_BANK.filter(q => q.ch === 2);
+    } else if (mode === 'ch3') {
+        activeQuestions = QUESTION_BANK.filter(q => q.ch === 3);
+    } else if (mode === 'traps') {
+        activeQuestions = QUESTION_BANK.filter(q => q.trap && q.trap.includes('BẪY'));
+    }
+
+    userState = {};
+    renderAll();
+}
+
+function startExam(count, minutes, btnEl) {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+
+    // Trộn ngẫu nhiên câu hỏi để tạo đề thi
+    const shuffled = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
+    activeQuestions = shuffled.slice(0, count);
+    userState = {};
+
+    // Khởi động đồng hồ đếm ngược
+    timeLeft = minutes * 60;
+    const tBox = document.getElementById('timer-box');
+    tBox.style.display = 'inline-block';
+    updateTimerDisplay();
+
+    stopTimer();
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+            stopTimer();
+            alert('HẾT GIỜ LÀM BÀI! Hãy kiểm tra điểm số của bạn.');
+        }
+    }, 1000);
+
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateTimerDisplay() {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    document.getElementById('timer-box').innerText = `⏱️ ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function renderAll() {
+    renderQuestions();
+    renderMoodleGrid();
+    updateDashboard();
+}
+
+function renderQuestions() {
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+
+    activeQuestions.forEach((q, idx) => {
+        const isDone = userState.hasOwnProperty(q.id);
+        const card = document.createElement('div');
+        card.className = `q-card ${isDone ? (userState[q.id].isCorrect ? 'done-ok' : 'done-fail') : ''}`;
+        card.id = `question-${idx + 1}`;
+
+        let optsHtml = '';
+        q.opts.forEach((optText, oIdx) => {
+            let cls = 'opt-item';
+            if (isDone) {
+                cls += ' disabled';
+                if (oIdx === q.ans) {
+                    cls += (userState[q.id].isCorrect ? ' is-correct' : ' hint-correct');
+                } else if (oIdx === userState[q.id].selected && !userState[q.id].isCorrect) {
+                    cls += ' is-wrong';
+                }
+            }
+            optsHtml += `
+                <button class="${cls}" onclick="handleAnswer(${q.id}, ${oIdx}, ${idx})">
+                    <span class="opt-char">${letters[oIdx]}</span>
+                    <span>${optText}</span>
+                </button>
+            `;
+        });
+
+        const showExplain = isDone && !userState[q.id].isCorrect;
+        card.innerHTML = `
+            <div class="q-head">
+                <span class="q-badge">Câu ${idx + 1} (Chương ${q.ch || 1})</span>
+                ${q.trap && q.trap.includes('BẪY') ? '<span class="q-trap-badge">⚠️ Bẫy Moodle</span>' : ''}
+            </div>
+            <div class="q-title">${q.q}</div>
+            <div class="opt-list">${optsHtml}</div>
+            <div class="trap-explain" id="explain-${q.id}" style="${showExplain ? 'display:block;' : ''}">
+                <b>⚠️ TẠI SAO SAI & CẢNH BÁO BẪY:</b>
+                ${q.trap || 'Ghi nhớ đáp án chính xác này để không bị mất điểm.'}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// RENDER BẢNG LƯỚI MOODLE
+function renderMoodleGrid() {
+    const grid = document.getElementById('moodle-grid');
+    grid.innerHTML = '';
+
+    activeQuestions.forEach((q, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'grid-btn';
+        btn.id = `nav-item-${idx + 1}`;
+        btn.innerText = idx + 1;
+
+        if (userState[q.id]) {
+            btn.classList.add(userState[q.id].isCorrect ? 'c-correct' : 'c-wrong');
+        }
+
+        btn.onclick = () => {
+            document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            scrollToQuestion(idx + 1);
+            if (window.innerWidth <= 880) toggleMobileNav();
+        };
+
+        grid.appendChild(btn);
+    });
+}
+
+function handleAnswer(qId, selectedIdx, questionIdx) {
+    if (userState[qId]) return;
+
+    const q = activeQuestions.find(item => item.id === qId);
+    const isCorrect = (selectedIdx === q.ans);
+    userState[qId] = { selected: selectedIdx, isCorrect: isCorrect };
+
+    // Cập nhật card câu hỏi ngay lập tức
+    const card = document.getElementById(`question-${questionIdx + 1}`);
+    if (card) {
+        card.className = `q-card ${isCorrect ? 'done-ok' : 'done-fail'}`;
+        const btns = card.querySelectorAll('.opt-item');
+        btns.forEach((b, idx) => {
+            b.classList.add('disabled');
+            if (idx === q.ans) b.className = `opt-item disabled ${isCorrect ? 'is-correct' : 'hint-correct'}`;
+            else if (idx === selectedIdx && !isCorrect) b.className = 'opt-item disabled is-wrong';
+        });
+
+        // Đúng: Không hiện giải thích. Sai: Bật ngay khung bẫy Moodle
+        const exp = document.getElementById(`explain-${qId}`);
+        if (exp) exp.style.display = isCorrect ? 'none' : 'block';
+    }
+
+    // Cập nhật ô số trên lưới Moodle
+    const gridBtn = document.getElementById(`nav-item-${questionIdx + 1}`);
+    if (gridBtn) {
+        gridBtn.classList.remove('c-correct', 'c-wrong');
+        gridBtn.classList.add(isCorrect ? 'c-correct' : 'c-wrong');
+    }
+
+    updateDashboard();
+}
+
+function scrollToQuestion(num) {
+    const el = document.getElementById(`question-${num}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateDashboard() {
+    const total = activeQuestions.length;
+    const answeredKeys = Object.keys(userState);
+    const done = answeredKeys.length;
+    let correct = 0;
+
+    answeredKeys.forEach(k => {
+        if (userState[k] && userState[k].isCorrect) correct++;
+    });
+
+    const point = total > 0 ? ((correct / total) * 10).toFixed(1) : '0.0';
+
+    document.getElementById('s-total').innerText = total;
+    document.getElementById('s-done').innerText = done;
+    document.getElementById('s-correct').innerText = correct;
+    document.getElementById('s-point').innerText = point;
+}
+
+function shuffleQuestions() {
+    activeQuestions.sort(() => Math.random() - 0.5);
+    userState = {};
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAnswers() {
+    if (confirm('Làm lại đề này từ đầu?')) {
+        userState = {};
+        renderAll();
+    }
+}
+
+function toggleMobileNav() {
+    const p = document.getElementById('nav-panel');
+    p.classList.toggle('show-mobile');
+    document.getElementById('btn-close-nav').style.display = p.classList.contains('show-mobile') ? 'inline' : 'none';
+}
+
+// Khởi chạy khi nạp trang
+initApp();
+</script>
+</body>
+</html>
