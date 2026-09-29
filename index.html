@@ -19,6 +19,7 @@
             --wrong-bg: rgba(239, 68, 68, 0.18);
             --gold: #fbbf24;
             --nav-border: #475569;
+            --timeline-color: #ec4899;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -37,13 +38,16 @@
         @media (max-width: 880px) { .main-layout { grid-template-columns: 1fr; } }
 
         .mode-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 15px; }
+        .mode-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
         .mode-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-        .mode-btn { background: #0b0f19; border: 1px solid var(--border); color: var(--text-sub); padding: 8px 12px; border-radius: 8px; font-size: 12.5px; font-weight: bold; cursor: pointer; transition: 0.15s; }
+        
+        .mode-btn { background: #0b0f19; border: 1px solid var(--border); color: var(--text-sub); padding: 7px 11px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.15s; }
         .mode-btn:hover, .mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
         .mode-btn.exam { border-color: var(--gold); color: var(--gold); }
         .mode-btn.exam.active { background: var(--gold); color: #000; }
-        .mode-btn.timeline { border-color: #ec4899; color: #ec4899; }
-        .mode-btn.timeline.active { background: #ec4899; color: #fff; border-color: #ec4899; }
+        
+        .mode-btn.timeline { border-color: var(--timeline-color); color: var(--timeline-color); }
+        .mode-btn.timeline.active { background: var(--timeline-color); color: #fff; border-color: var(--timeline-color); }
 
         .score-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
         .score-box { background: #090d16; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--border); }
@@ -53,10 +57,11 @@
         .q-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; scroll-margin-top: 75px; transition: border-color 0.2s; }
         .q-card.done-ok { border-color: var(--correct); }
         .q-card.done-fail { border-color: var(--wrong); }
-        .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 4px; }
+        .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .badge-wrap { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         .q-badge { background: #1e293b; color: var(--accent); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
-        .q-trap-badge { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-time-badge { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+        .q-trap-badge { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 
         .opt-list { display: flex; flex-direction: column; gap: 8px; }
@@ -113,17 +118,25 @@
 <div class="main-layout">
     <div>
         <div class="mode-card">
-            <div style="font-size: 12px; font-weight: bold; color: var(--gold); margin-bottom: 8px;">CHỌN CHẾ ĐỘ THI & ÔN TẬP:</div>
+            <span class="mode-label" style="color: var(--timeline-color);">📅 LUYỆN RIÊNG MỐC THỜI GIAN THEO TỪNG CHƯƠNG:</span>
             <div class="mode-row">
-                <button class="mode-btn exam" onclick="startExam(50, 40, this)">🔥 Thi Thử 50 Câu (40p)</button>
-                <button class="mode-btn exam" onclick="startExam(20, 15, this)">⚡ Thi Thử 20 Câu (15p)</button>
+                <button class="mode-btn timeline" onclick="loadMode('time_ch1', this)">📅 Mốc C1 (<span id="cnt-time-ch1">0</span>)</button>
+                <button class="mode-btn timeline" onclick="loadMode('time_ch2', this)">📅 Mốc C2 (<span id="cnt-time-ch2">0</span>)</button>
+                <button class="mode-btn timeline" onclick="loadMode('time_ch3', this)">📅 Mốc C3 (<span id="cnt-time-ch3">0</span>)</button>
+                <button class="mode-btn timeline" onclick="loadMode('time_all', this)">📅 Gom Mốc 3 Chương (<span id="cnt-time-all">0</span>)</button>
+            </div>
+
+            <span class="mode-label" style="color: var(--accent);">📚 TOÀN BỘ CHƯƠNG & CHẾ ĐỘ THI:</span>
+            <div class="mode-row">
                 <button class="mode-btn active" onclick="loadMode('ch1', this)" id="btn-ch1">Chương 1 (<span id="cnt-ch1">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('ch2', this)" id="btn-ch2">Chương 2 (<span id="cnt-ch2">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('ch3', this)" id="btn-ch3">Chương 3 (<span id="cnt-ch3">0</span>)</button>
-                <button class="mode-btn timeline" onclick="loadMode('timeline', this)">📅 Mốc Ngày-Tháng-Năm (<span id="cnt-timeline">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('traps', this)">⚠️ Bẫy Moodle (<span id="cnt-trap">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('all', this)">Tất Cả (<span id="cnt-all">0</span>)</button>
+                <button class="mode-btn exam" onclick="startExam(50, 40, this)">🔥 Thi Thử 50 Câu (40p)</button>
+                <button class="mode-btn exam" onclick="startExam(20, 15, this)">⚡ Thi Thử 20 Câu (15p)</button>
             </div>
+
             <div class="score-bar">
                 <div class="score-box">
                     <div class="score-num" id="s-total" style="color: var(--accent);">0</div>
@@ -177,15 +190,6 @@ let userState = {};
 let timerInterval = null;
 let timeLeft = 0;
 
-// Hàm kiểm tra một câu hỏi có thuộc dạng "Mốc Thời Gian / Ngày - Tháng - Năm" không
-function isDateQuestion(q) {
-    const timeRegex = /(ngày|tháng|năm|thời gian nào|vào năm|giai đoạn|khi nào|\d{1,2}\/\d{1,2}|\b(19\d{2}|20\d{2})\b)/i;
-    if (timeRegex.test(q.q)) return true;
-    // Kiểm tra xem các đáp án có toàn chứa ngày tháng năm không
-    const matchCount = q.opts.filter(opt => timeRegex.test(opt)).length;
-    return matchCount >= 2;
-}
-
 function detectChapterSmart(fname, text) {
     const fn = (fname || '').toLowerCase();
     if (fn.includes('chương 3') || fn.includes('chuong 3') || fn.includes('ch3') || fn.includes('3.txt')) return 3;
@@ -193,62 +197,67 @@ function detectChapterSmart(fname, text) {
     if (fn.includes('chương 1') || fn.includes('chuong 1') || fn.includes('ch1') || fn.includes('1.txt')) return 1;
 
     const t = text.toLowerCase();
-    if (t.includes('đổi mới') || t.includes('đại hội vi') || t.includes('đại hội vii') || t.includes('cương lĩnh 1991') || t.includes('cương lĩnh 2011') || t.includes('wto') || t.includes('gạc ma')) {
-        return 3;
-    }
-    if (t.includes('điện biên phủ') || t.includes('hiệp định pari') || t.includes('hiệp định sơ bộ') || t.includes('kháng chiến chống thực dân pháp') || t.includes('nava') || t.includes('vạn tường')) {
-        return 2;
-    }
+    if (t.includes('đổi mới') || t.includes('đại hội vi') || t.includes('cương lĩnh 1991') || t.includes('wto') || t.includes('gạc ma')) return 3;
+    if (t.includes('điện biên phủ') || t.includes('hiệp định pari') || t.includes('hiệp định sơ bộ') || t.includes('kháng chiến chống thực dân pháp')) return 2;
     return 1;
 }
 
+// BỘ TRÍCH XUẤT CHUẨN XÁC DỰA THEO KHỐI "NHÓM 1" VÀ "NHÓM 2"
 function parseTextToQuestions(text, fname) {
     const chNumber = detectChapterSmart(fname, text);
-    const rawBlocks = text.split(/🔴\s*(?:\*\*)?Câu hỏi\s*(\d+)[\*:]*/i);
+    const sections = text.split(/(?=NHÓM\s*[12]:)/i);
     const parsed = [];
 
-    for (let i = 1; i < rawBlocks.length; i += 2) {
-        const num = parseInt(rawBlocks[i]);
-        const content = rawBlocks[i + 1];
-        if (!content) continue;
+    sections.forEach(sec => {
+        // Chỉ những câu nằm dưới khối NHÓM 1 mới được tính là mốc thời gian
+        const isTimeGroup = /NHÓM\s*1\s*:\s*CÁC\s*CÂU\s*HỎI\s*VỀ\s*THỜI\s*GIAN/i.test(sec);
+        const rawBlocks = sec.split(/🔴\s*(?:\*\*)?Câu hỏi\s*(\d+)[\*:]*/i);
 
-        const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
-        if (lines.length < 3) continue;
+        for (let i = 1; i < rawBlocks.length; i += 2) {
+            const num = parseInt(rawBlocks[i]);
+            const content = rawBlocks[i + 1];
+            if (!content) continue;
 
-        const qTitle = lines[0].replace(/^[:\*\s]+/, '').replace(/[\*]+$/, '').trim();
-        const opts = [];
-        let ans = -1;
-        let trap = '';
+            const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length < 3) continue;
 
-        for (let j = 1; j < lines.length; j++) {
-            const line = lines[j];
-            const optMatch = line.match(/^([a-d])[\.\)]\s*(.*)/i);
-            if (optMatch) {
-                let optText = optMatch[2].trim();
-                if (optText.includes('🟢')) {
-                    ans = opts.length;
-                    optText = optText.replace(/🟢/g, '').trim();
+            const qTitle = lines[0].replace(/^[:\*\s]+/, '').replace(/[\*]+$/, '').trim();
+            const opts = [];
+            let ans = -1;
+            let trap = '';
+
+            for (let j = 1; j < lines.length; j++) {
+                const line = lines[j];
+                const optMatch = line.match(/^([a-d])[\.\)]\s*(.*)/i);
+                if (optMatch) {
+                    let optText = optMatch[2].trim();
+                    if (optText.includes('🟢')) {
+                        ans = opts.length;
+                        optText = optText.replace(/🟢/g, '').trim();
+                    }
+                    opts.push(optText);
+                } else if (line.includes('⚠️') || /lưu ý bẫy moodle/i.test(line)) {
+                    trap = line.replace(/^[⚠️\*\s]+/, '').replace(/^Lưu ý bẫy Moodle[:\s\*\-]*/i, '').replace(/[\*]+$/, '').trim();
+                } else if (trap && line.length > 0 && !line.startsWith('🔴')) {
+                    trap += ' ' + line.replace(/[\*]+$/, '').trim();
                 }
-                opts.push(optText);
-            } else if (line.includes('⚠️') || /lưu ý bẫy moodle/i.test(line)) {
-                trap = line.replace(/^[⚠️\*\s]+/, '').replace(/^Lưu ý bẫy Moodle[:\s\*\-]*/i, '').replace(/[\*]+$/, '').trim();
-            } else if (trap && line.length > 0 && !line.startsWith('🔴')) {
-                trap += ' ' + line.replace(/[\*]+$/, '').trim();
+            }
+
+            if (opts.length >= 2 && ans !== -1) {
+                parsed.push({
+                    id: `c${chNumber}_${num}`,
+                    num: num,
+                    ch: chNumber,
+                    q: qTitle,
+                    opts: opts,
+                    ans: ans,
+                    trap: trap,
+                    isTime: isTimeGroup
+                });
             }
         }
+    });
 
-        if (opts.length >= 2 && ans !== -1) {
-            parsed.push({
-                id: `c${chNumber}_${num}`,
-                num: num,
-                ch: chNumber,
-                q: qTitle,
-                opts: opts,
-                ans: ans,
-                trap: trap
-            });
-        }
-    }
     return { ch: chNumber, list: parsed };
 }
 
@@ -279,15 +288,17 @@ async function handleFileSelect(evt) {
         saveQuestionsToBank(res);
     }
 
-    const c1 = globalBank.filter(q => q.ch === 1).length;
-    const c2 = globalBank.filter(q => q.ch === 2).length;
-    const c3 = globalBank.filter(q => q.ch === 3).length;
+    const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
+    const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
+    const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
+    const tAll = t1 + t2 + t3;
 
     alert(`🎉 NẠP THÀNH CÔNG!\n\n` +
-          `• Chương 1: ${c1} câu\n` +
-          `• Chương 2: ${c2} câu\n` +
-          `• Chương 3: ${c3} câu\n\n` +
-          `🎯 TỔNG CỘNG: ${globalBank.length} CÂU HỎI TRONG BỘ NHỚ!`);
+          `• Mốc Chương 1: ${t1} câu\n` +
+          `• Mốc Chương 2: ${t2} câu\n` +
+          `• Mốc Chương 3: ${t3} câu\n` +
+          `📅 Tổng câu mốc thời gian: ${tAll} câu!\n` +
+          `🎯 TỔNG NGÂN HÀNG: ${globalBank.length} CÂU HỎI.`);
 
     loadMode(currentMode);
     evt.target.value = '';
@@ -303,11 +314,11 @@ function handlePasteImport() {
     document.getElementById('paste-input').value = '';
     closePasteModal();
 
-    const c1 = globalBank.filter(q => q.ch === 1).length;
-    const c2 = globalBank.filter(q => q.ch === 2).length;
-    const c3 = globalBank.filter(q => q.ch === 3).length;
+    const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
+    const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
+    const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
 
-    alert(`🎉 ĐÃ NẠP THÀNH CÔNG!\n• Chương 1: ${c1} câu | Chương 2: ${c2} câu | Chương 3: ${c3} câu`);
+    alert(`🎉 ĐÃ NẠP THÀNH CÔNG!\n• Mốc C1: ${t1} câu | Mốc C2: ${t2} câu | Mốc C3: ${t3} câu`);
     loadMode(currentMode);
 }
 
@@ -317,14 +328,23 @@ function updateCounters() {
     const c2 = globalBank.filter(q => q.ch === 2).length;
     const c3 = globalBank.filter(q => q.ch === 3).length;
     const traps = globalBank.filter(q => q.trap && q.trap.length > 0).length;
-    const timeCount = globalBank.filter(q => isDateQuestion(q)).length;
+
+    // Đếm chuẩn xác theo flag isTime
+    const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
+    const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
+    const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
+    const tAll = t1 + t2 + t3;
 
     document.getElementById('cnt-all').innerText = total;
     document.getElementById('cnt-ch1').innerText = c1;
     document.getElementById('cnt-ch2').innerText = c2;
     document.getElementById('cnt-ch3').innerText = c3;
     document.getElementById('cnt-trap').innerText = traps;
-    document.getElementById('cnt-timeline').innerText = timeCount;
+
+    document.getElementById('cnt-time-ch1').innerText = t1;
+    document.getElementById('cnt-time-ch2').innerText = t2;
+    document.getElementById('cnt-time-ch3').innerText = t3;
+    document.getElementById('cnt-time-all').innerText = tAll;
 }
 
 function loadMode(mode, btnEl) {
@@ -341,7 +361,10 @@ function loadMode(mode, btnEl) {
     else if (mode === 'ch2') activeQuestions = globalBank.filter(q => q.ch === 2).sort((a,b) => a.num - b.num);
     else if (mode === 'ch3') activeQuestions = globalBank.filter(q => q.ch === 3).sort((a,b) => a.num - b.num);
     else if (mode === 'traps') activeQuestions = globalBank.filter(q => q.trap && q.trap.length > 0);
-    else if (mode === 'timeline') activeQuestions = globalBank.filter(q => isDateQuestion(q));
+    else if (mode === 'time_ch1') activeQuestions = globalBank.filter(q => q.ch === 1 && q.isTime).sort((a,b) => a.num - b.num);
+    else if (mode === 'time_ch2') activeQuestions = globalBank.filter(q => q.ch === 2 && q.isTime).sort((a,b) => a.num - b.num);
+    else if (mode === 'time_ch3') activeQuestions = globalBank.filter(q => q.ch === 3 && q.isTime).sort((a,b) => a.num - b.num);
+    else if (mode === 'time_all') activeQuestions = globalBank.filter(q => q.isTime).sort((a,b) => a.ch - b.ch || a.num - b.num);
     else if (mode === 'all') activeQuestions = [...globalBank];
 
     userState = {};
@@ -383,7 +406,7 @@ function startExam(count, minutes, btnEl) {
 function updateTimerDisplay() {
     const m = Math.floor(timeLeft / 60);
     const s = timeLeft % 60;
-    document.getElementById('timer-box').innerText = `⏱️ ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    document.getElementById('timer-box').innerText = `⏱️️ ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
 function stopTimer() {
@@ -431,13 +454,12 @@ function renderQuestions() {
         });
 
         const showExplain = isDone && !userState[q.id].isCorrect;
-        const isTimeQ = isDateQuestion(q);
 
         card.innerHTML = `
             <div class="q-head">
                 <span class="q-badge">Câu ${idx + 1} (Gốc: Câu ${q.num} - Chương ${q.ch})</span>
-                <div>
-                    ${isTimeQ ? '<span class="q-time-badge">⏱️ Mốc thời gian</span>' : ''}
+                <div class="badge-wrap">
+                    ${q.isTime ? '<span class="q-time-badge">⏱️ Mốc thời gian</span>' : ''}
                     ${q.trap ? '<span class="q-trap-badge">⚠️ Bẫy Moodle</span>' : ''}
                 </div>
             </div>
