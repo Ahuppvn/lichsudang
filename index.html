@@ -24,7 +24,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-main); line-height: 1.5; padding-bottom: 70px; }
 
-        /* Header */
         header { background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 10px 16px; }
         .header-wrap { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .brand { font-size: 16px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
@@ -37,7 +36,6 @@
         .main-layout { max-width: 1200px; margin: 15px auto; padding: 0 12px; display: grid; grid-template-columns: 1fr 280px; gap: 18px; align-items: start; }
         @media (max-width: 880px) { .main-layout { grid-template-columns: 1fr; } }
 
-        /* Bảng điều khiển */
         .mode-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 15px; }
         .mode-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
         .mode-btn { background: #0b0f19; border: 1px solid var(--border); color: var(--text-sub); padding: 8px 12px; border-radius: 8px; font-size: 12.5px; font-weight: bold; cursor: pointer; transition: 0.15s; }
@@ -50,7 +48,6 @@
         .score-num { font-size: 16px; font-weight: 900; }
         .score-sub { font-size: 10px; color: var(--text-sub); }
 
-        /* Câu hỏi */
         .q-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; scroll-margin-top: 75px; transition: border-color 0.2s; }
         .q-card.done-ok { border-color: var(--correct); }
         .q-card.done-fail { border-color: var(--wrong); }
@@ -70,11 +67,9 @@
         .opt-item.hint-correct { border: 1px dashed var(--correct) !important; color: #34d399; }
         .opt-item.disabled { pointer-events: none; }
 
-        /* Giải thích chỉ hiện khi SAI */
         .trap-explain { display: none; background: #261214; border-left: 4px solid var(--wrong); padding: 10px 12px; border-radius: 0 6px 6px 0; margin-top: 10px; font-size: 13px; line-height: 1.5; color: #fecaca; }
         .trap-explain b { color: #f87171; display: block; margin-bottom: 2px; }
 
-        /* LƯỚI MOODLE */
         .moodle-nav-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; position: sticky; top: 75px; max-height: calc(100vh - 90px); overflow-y: auto; }
         .nav-panel-title { font-size: 13px; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
@@ -99,7 +94,6 @@
         <div class="brand">🎯 LỊCH SỬ ĐẢNG <span>MOODLE</span></div>
         <div class="timer-box" id="timer-box">⏱️ 40:00</div>
         <div class="head-actions">
-            <!-- Nút chọn 3 file txt từ máy -->
             <input type="file" id="file-picker" multiple accept=".txt" style="display:none;" onchange="handleFileSelect(event)">
             <button class="btn-head btn-import" onclick="document.getElementById('file-picker').click()">📁 Nạp 3 File .txt</button>
             <button class="btn-head" onclick="shuffleQuestions()">🔀 Tráo đề</button>
@@ -115,11 +109,11 @@
             <div class="mode-row">
                 <button class="mode-btn exam" onclick="startExam(50, 40, this)">🔥 Thi Thử 50 Câu (40p)</button>
                 <button class="mode-btn exam" onclick="startExam(20, 15, this)">⚡ Thi Thử 20 Câu (15p)</button>
-                <button class="mode-btn active" onclick="loadMode('ch1', this)" id="btn-ch1">Chương 1 (<span id="cnt-ch1">80</span>)</button>
-                <button class="mode-btn" onclick="loadMode('ch2', this)" id="btn-ch2">Chương 2 (<span id="cnt-ch2">85</span>)</button>
-                <button class="mode-btn" onclick="loadMode('ch3', this)" id="btn-ch3">Chương 3 (<span id="cnt-ch3">60</span>)</button>
-                <button class="mode-btn" onclick="loadMode('traps', this)">⚠️ 16 Câu Bẫy</button>
-                <button class="mode-btn" onclick="loadMode('all', this)">Tất Cả (<span id="cnt-all">225</span>)</button>
+                <button class="mode-btn active" onclick="loadMode('ch1', this)" id="btn-ch1">Chương 1 (<span id="cnt-ch1">0</span>)</button>
+                <button class="mode-btn" onclick="loadMode('ch2', this)" id="btn-ch2">Chương 2 (<span id="cnt-ch2">0</span>)</button>
+                <button class="mode-btn" onclick="loadMode('ch3', this)" id="btn-ch3">Chương 3 (<span id="cnt-ch3">0</span>)</button>
+                <button class="mode-btn" onclick="loadMode('traps', this)">⚠️ Bẫy Moodle (<span id="cnt-trap">0</span>)</button>
+                <button class="mode-btn" onclick="loadMode('all', this)">Tất Cả (<span id="cnt-all">0</span>)</button>
             </div>
             <div class="score-bar">
                 <div class="score-box">
@@ -144,7 +138,6 @@
         <div id="questions-container"></div>
     </div>
 
-    <!-- Bảng lưới Moodle -->
     <div class="moodle-nav-panel" id="nav-panel">
         <div class="nav-panel-title">
             <span>Bảng Câu Hỏi Moodle</span>
@@ -157,41 +150,15 @@
 <button class="mobile-nav-toggle" onclick="toggleMobileNav()">📋 Bảng câu hỏi</button>
 
 <script>
-// BỘ NGÂN HÀNG CÂU HỎI MẶC ĐỊNH (Bao gồm các bẫy Moodle then chốt)
-const CORE_INITIAL_BANK = [
-    { id: "c1_4", ch: 1, num: 4, q: "Ban chấp hành Trung ương Đảng xác định chuẩn bị khởi nghĩa vũ trang là nhiệm vụ trung tâm tại Hội nghị nào?", opts: ["Hội nghị họp tháng 11 - 1940", "Hội nghị họp tháng 10 - 1930", "Hội nghị họp tháng 11 - 1939", "Hội nghị họp tháng 5 – 1941"], ans: 3, trap: "Hội nghị Trung ương 8 (5/1941) họp tại Pác Bó đã hoàn chỉnh chuyển hướng chỉ đạo chiến lược." },
-    { id: "c1_27", ch: 1, num: 27, q: "Điều kiện nào tạo ra khả năng đấu tranh công khai hợp pháp cho phong trào cách mạng Đông Dương giai đoạn 1936 - 1939?", opts: ["Mặt trận nhân dân Pháp lên cầm quyền", "Tất cả các điều kiện trên", "Chủ trương chuyển hướng chiến lược cách mạng thế giới của Quốc tế Cộng sản", "Sự xuất hiện chủ nghĩa phát xít và nguy cơ chiến tranh thế giới"], ans: 0, trap: "⚠️ BẪY MOODLE: Không chọn 'Tất cả các điều kiện trên'. Hệ thống Moodle cài đặt đáp án đúng là: Mặt trận nhân dân Pháp lên cầm quyền." },
-    { id: "c1_44", ch: 1, num: 44, q: "Khẩu hiệu nào sau được nêu ra trong Cao trào kháng Nhật cứu nước?", opts: ["Đánh đuổi phát xít Nhật - Pháp", "Đánh đuổi phát xít Nhật", "Giải quyết nạn đói", "Chống nhổ lúa trồng đay"], ans: 0, trap: "⚠️ BẪY MOODLE: Chọn 'Đánh đuổi phát xít Nhật' bị hệ thống chấm sai. Đáp án cài sẵn của trường là: Đánh đuổi phát xít Nhật - Pháp." },
-    { id: "c1_66", ch: 1, num: 66, q: "Tổ chức An Nam Cộng sản Đảng được thành lập vào thời gian nào?", opts: ["Tháng 6 - 1927", "Tháng 6 - 1928", "Tháng 11 - 1929", "Tháng 7 – 1929"], ans: 2, trap: "⚠️ BẪY MOODLE: Không chọn tháng 7 – 1929. Đáp án chính xác được hệ thống chấp nhận là: Tháng 11 - 1929." },
-    { id: "c2_24", ch: 2, num: 24, q: "Đầu năm 1948, TW Đảng đã đề ra cách thức thực hiện cách mạng ruộng đất theo đường lối riêng biệt của cách mạng Việt Nam, đó là:", opts: ["Sửa đổi chế độ ruộng đất trong phạm vi không có hại cho nông dân.", "Cải cách từng bước để dần dần thu hẹp phạm vi bóc lột của địa chủ", "Cải cách ruộng đất", "Cả ba phương án trên"], ans: 3, trap: "⚠️ BẪY MOODLE: Nhất định phải khoanh (d) 'Cả ba phương án trên' mới được Moodle tính điểm!" },
-    { id: "c2_39", ch: 2, num: 39, q: "Hội nghị Ban thường vụ Trung Đảng họp mở rộng quyết định phát động cuộc kháng chiến toàn quốc họp vào thời gian nào?", opts: ["Ngày 18 - 12 - 1946", "Ngày 22 - 12 – 1946", "Ngày 19 - 12 - 1946", "Ngày 20 - 12 - 1946"], ans: 2, trap: "⚠️ BẪY MOODLE: Sinh viên rất hay nhầm ngày 18. Moodle chấm sai nếu chọn ngày 18. Đáp án chuẩn là: Ngày 19 - 12 - 1946." },
-    { id: "c2_45", ch: 2, num: 45, q: "Kẻ thù chính của cách mạng Việt Nam ngay sau Cách mạng 8 - 1945?", opts: ["Tưởng Giới Thạch và tay sai", "Thực dân Anh xâm lược", "Giặc đói và giặc dốt.", "Thực dân Pháp xâm lược."], ans: 2, trap: "⚠️ BẪY MOODLE CỰC HIỂM: Theo phản xạ sinh viên sẽ chọn Pháp, nhưng đáp án cài đặt của trường là: Giặc đói và giặc dốt." },
-    { id: "c2_69", ch: 2, num: 69, q: "Sau bản Hiệp định sơ bộ, ngày 14 - 9 Chủ tịch Hồ Chí Minh đã thay mặt Chính phủ ký bản Tạm ước với Chính phủ Pháp với nội dung:", opts: ["Chấm dứt chiến tranh ở Việt Nam.", "Pháp thừa nhận các quyền dân tộc cơ bản của nước Việt Nam", "Đình chỉ xung đột ở miền Nam và sẽ tiếp tục đàm phán vào 1 - 1947", "Các nội dung đều đúng"], ans: 3, trap: "⚠️ BẪY MOODLE: Chọn (c) sẽ bị báo sai. Phải chọn: (d) Các nội dung đều đúng." },
-    { id: "c2_76", ch: 2, num: 76, q: "Tại sao Đảng lại lựa chọn giải pháp thương lượng với Pháp", opts: ["Cả ba đáp án trên", "Phối hợp với Pháp tấn công Tưởng.", "Chấm dứt cuộc kháng chiến ở Nam Bộ", "Buộc quân Tưởng phải rút ngay về nước..."], ans: 0, trap: "⚠️ BẪY MOODLE: Ngân hàng đề của trường cài đặt đáp án đúng là: (a) Cả ba đáp án trên." },
-    { id: "c3_3", ch: 3, num: 3, q: "“Tăng cường xây dựng Đảng trong sạch, vững mạnh; phát huy sức mạnh toàn dân tộc... phấn đấu sớm đưa nước ta cơ bản thành nước công nghiệp theo hướng hiện đại” là chủ đề của Đại hội nào?", opts: ["Đại hội XIII", "Đại hội XI", "Đại hội XII", "Đại hội X"], ans: 2, trap: "⚠️ BẪY MOODLE: Cụm từ 'cơ bản thành nước công nghiệp theo hướng hiện đại' là chủ đề của: ĐẠI HỘI XII." },
-    { id: "c3_14", ch: 3, num: 14, q: "Chủ trương tổ chức cuộc vận động học tập và làm theo tấm gương đạo đức Hồ Chí Minh được đảng ta đề ra vào thời gian nào?", opts: ["Tháng 11 – 2008", "Tháng 11 – 2006", "Tháng 10 – 2008", "Tháng 10 – 2006"], ans: 1, trap: "⚠️ BẪY MOODLE: Dễ nhầm tháng 10. Chỉ thị 06 ban hành ngày 7/11/2006 nên đáp án chuẩn là: Tháng 11 – 2006." },
-    { id: "c3_16", ch: 3, num: 16, q: "Cương lĩnh năm 1991 đã xác định mô hình xã hội xã hội chủ nghĩa mà nhân dân ta xây dựng có mấy đặc trưng?", opts: ["5", "7", "8", "6"], ans: 2, trap: "⚠️ BẪY MOODLE: Giáo trình chuẩn có 6, nhưng đề Moodle cài đặt đáp án đúng là 8. Bắt buộc chọn 8 để có điểm!" },
-    { id: "c3_19", ch: 3, num: 19, q: "Cương lĩnh năm 2011 xác định mục tiêu tổng quát khi kết thúc thời kỳ quá độ ở nước ta là gì?", opts: ["Cả ba đáp án trên", "Đến giữa thế kỷ XXI...", "Xây dựng được về cơ bản nền tảng kinh tế...", "Tạo cơ sở để nước ta trở thành nước XHCN..."], ans: 0, trap: "⚠️ BẪY MOODLE: Đáp án bao quát được hệ thống ghi nhận là: (a) Cả ba đáp án trên." },
-    { id: "c3_27", ch: 3, num: 27, q: "Đại hội nào được đánh giá là đại hội mang tính bước ngoặt của Đảng, đưa đất nước sang thời kỳ mới đẩy mạnh công nghiệp hóa, hiện đại hóa?", opts: ["Đại hội IX", "Đại hội VI", "Đại hội VIII", "Đại hội VII"], ans: 3, trap: "⚠️ BẪY MOODLE: Hệ thống coi đại hội mang tính bước ngoặt đưa đất nước sang thời kỳ mới là: Đại hội VII (1991)." },
-    { id: "c3_28", ch: 3, num: 28, q: "Đại hội VI đã đề ra mấy phương hướng lớn nhằm phát triển kinh tế - xã hội đất nước?", opts: ["5", "7", "6", "4"], ans: 2, trap: "⚠️ BẪY MOODLE: Nhớ chính xác số lượng phương hướng lớn của Đại hội VI là: 6." },
-    { id: "c3_41", ch: 3, num: 41, q: "Hội nghị hiệp thương chính trị giữa đoàn đại biểu miền Bắc và đoàn đại biểu miền Nam đã họp ở đâu?", opts: ["Đà Nẵng", "Hà Nội", "Huế", "Sài Gòn"], ans: 3, trap: "⚠️ BẪY MOODLE: Hội nghị hiệp thương chính trị thống nhất hai miền (11/1975) họp tại Sài Gòn." },
-    { id: "c3_60", ch: 3, num: 60, q: "Việt Nam chính thức được kết nạp là thành viên thứ 150 của WTO vào thời gian nào?", opts: ["Tháng 12 – 2005", "Tháng 11 – 2005", "Tháng 12 – 2006", "Tháng 11 – 2006"], ans: 3, trap: "⚠️ BẪY MOODLE: Lễ kết nạp diễn ra vào Tháng 11 – 2006 (ngày 7/11/2006)." }
-];
-
-let globalBank = JSON.parse(localStorage.getItem('LSD_GLOBAL_BANK') || JSON.stringify(CORE_INITIAL_BANK));
+let globalBank = JSON.parse(localStorage.getItem('LSD_BANK_V3') || '[]');
 let currentMode = 'ch1';
 let activeQuestions = [];
 let userState = {}; 
 let timerInterval = null;
 let timeLeft = 0;
 
-// BỘ PHÂN TÍCH FILE TEXT CỰC MẠNH
-function parseTextToQuestions(text, defaultCh) {
-    let ch = defaultCh;
-    if (/chương\s*1/i.test(text)) ch = 1;
-    else if (/chương\s*2/i.test(text)) ch = 2;
-    else if (/chương\s*3/i.test(text)) ch = 3;
-
+// PARSER TỐI ƯU ĐỌC CHUẨN CẢ 3 CHƯƠNG THEO TÊN FILE
+function parseTextToQuestions(text, chNumber) {
     const rawBlocks = text.split(/🔴\s*(?:\*\*)?Câu hỏi\s*(\d+)[\*:]*/i);
     const parsed = [];
 
@@ -201,7 +168,7 @@ function parseTextToQuestions(text, defaultCh) {
         if (!content) continue;
 
         const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
-        if (lines.length < 5) continue;
+        if (lines.length < 3) continue;
 
         const qTitle = lines[0].replace(/^[:\*\s]+/, '').replace(/[\*]+$/, '').trim();
         const opts = [];
@@ -227,9 +194,9 @@ function parseTextToQuestions(text, defaultCh) {
 
         if (opts.length >= 2 && ans !== -1) {
             parsed.push({
-                id: `c${ch}_${num}`,
+                id: `c${chNumber}_${num}_${Math.random().toString(36).substr(2, 4)}`,
                 num: num,
-                ch: ch,
+                ch: chNumber,
                 q: qTitle,
                 opts: opts,
                 ans: ans,
@@ -240,72 +207,65 @@ function parseTextToQuestions(text, defaultCh) {
     return parsed;
 }
 
-// Xử lý nạp 3 file từ máy tính/điện thoại
+// XỬ LÝ CHỌN FILE VÀ PHÂN LOẠI CHÍNH XÁC THEO TÊN FILE
 async function handleFileSelect(evt) {
     const files = evt.target.files;
     if (!files || files.length === 0) return;
 
+    // Reset lại ngân hàng để tránh dồn câu nhầm lẫn
+    globalBank = [];
+
     let totalAdded = 0;
     for (let f of files) {
         const text = await f.text();
-        const parsed = parseTextToQuestions(text, 1);
-        
+        const fname = f.name.toLowerCase();
+
+        // Nhận diện Chương dựa thẳng vào tên file
+        let detectedCh = 1;
+        if (fname.includes('2') || fname.includes('chương 2') || fname.includes('chuong 2')) {
+            detectedCh = 2;
+        } else if (fname.includes('3') || fname.includes('chương 3') || fname.includes('chuong 3')) {
+            detectedCh = 3;
+        } else {
+            detectedCh = 1;
+        }
+
+        const parsed = parseTextToQuestions(text, detectedCh);
         parsed.forEach(q => {
-            const existingIdx = globalBank.findIndex(item => item.id === q.id);
-            if (existingIdx >= 0) {
-                globalBank[existingIdx] = q;
-            } else {
-                globalBank.push(q);
-            }
+            globalBank.push(q);
             totalAdded++;
         });
     }
 
-    localStorage.setItem('LSD_GLOBAL_BANK', JSON.stringify(globalBank));
+    localStorage.setItem('LSD_BANK_V3', JSON.stringify(globalBank));
+    userState = {};
     updateCounters();
-    alert(`🎉 Đã nạp thành công dữ liệu từ ${files.length} file! Hiện tại hệ thống có ${globalBank.length} câu hỏi.`);
+
+    const c1 = globalBank.filter(q => q.ch === 1).length;
+    const c2 = globalBank.filter(q => q.ch === 2).length;
+    const c3 = globalBank.filter(q => q.ch === 3).length;
+
+    alert(`🎉 ĐÃ NẠP THÀNH CÔNG ${totalAdded} CÂU HỎI!\n` +
+          `• Chương 1: ${c1} câu\n` +
+          `• Chương 2: ${c2} câu\n` +
+          `• Chương 3: ${c3} câu\n` +
+          `Tổng cộng đã sẵn sàng thi thử 50 câu!`);
+
     loadMode(currentMode);
 }
 
-// Tự động tải file từ cùng kho GitHub (nếu bạn đã kéo thả file txt lên)
-async function autoFetchFromRepo() {
-    const targets = [
-        { url: 'chương 1.txt', ch: 1 }, { url: 'ch1.txt', ch: 1 },
-        { url: 'chương 2.txt', ch: 2 }, { url: 'ch2.txt', ch: 2 },
-        { url: 'Chương 3.txt', ch: 3 }, { url: 'ch3.txt', ch: 3 }
-    ];
-
-    let updated = false;
-    for (let t of targets) {
-        try {
-            const res = await fetch(encodeURI(t.url));
-            if (res.ok) {
-                const text = await res.text();
-                const parsed = parseTextToQuestions(text, t.ch);
-                if (parsed.length > 0) {
-                    parsed.forEach(q => {
-                        const idx = globalBank.findIndex(item => item.id === q.id);
-                        if (idx >= 0) globalBank[idx] = q;
-                        else globalBank.push(q);
-                    });
-                    updated = true;
-                }
-            }
-        } catch(e) {}
-    }
-
-    if (updated) {
-        localStorage.setItem('LSD_GLOBAL_BANK', JSON.stringify(globalBank));
-        updateCounters();
-        loadMode(currentMode);
-    }
-}
-
 function updateCounters() {
-    document.getElementById('cnt-all').innerText = globalBank.length;
-    document.getElementById('cnt-ch1').innerText = globalBank.filter(q => q.ch === 1).length;
-    document.getElementById('cnt-ch2').innerText = globalBank.filter(q => q.ch === 2).length;
-    document.getElementById('cnt-ch3').innerText = globalBank.filter(q => q.ch === 3).length;
+    const total = globalBank.length;
+    const c1 = globalBank.filter(q => q.ch === 1).length;
+    const c2 = globalBank.filter(q => q.ch === 2).length;
+    const c3 = globalBank.filter(q => q.ch === 3).length;
+    const traps = globalBank.filter(q => q.trap && q.trap.length > 0).length;
+
+    document.getElementById('cnt-all').innerText = total;
+    document.getElementById('cnt-ch1').innerText = c1;
+    document.getElementById('cnt-ch2').innerText = c2;
+    document.getElementById('cnt-ch3').innerText = c3;
+    document.getElementById('cnt-trap').innerText = traps;
 }
 
 function loadMode(mode, btnEl) {
@@ -321,7 +281,7 @@ function loadMode(mode, btnEl) {
     if (mode === 'ch1') activeQuestions = globalBank.filter(q => q.ch === 1).sort((a,b) => a.num - b.num);
     else if (mode === 'ch2') activeQuestions = globalBank.filter(q => q.ch === 2).sort((a,b) => a.num - b.num);
     else if (mode === 'ch3') activeQuestions = globalBank.filter(q => q.ch === 3).sort((a,b) => a.num - b.num);
-    else if (mode === 'traps') activeQuestions = globalBank.filter(q => q.trap && (q.trap.includes('BẪY') || q.trap.includes('Moodle')));
+    else if (mode === 'traps') activeQuestions = globalBank.filter(q => q.trap && q.trap.length > 0);
     else if (mode === 'all') activeQuestions = [...globalBank];
 
     userState = {};
@@ -329,10 +289,15 @@ function loadMode(mode, btnEl) {
 }
 
 function startExam(count, minutes, btnEl) {
+    if (globalBank.length === 0) {
+        alert('Chưa có câu hỏi nào! Hãy bấm "📁 Nạp 3 File .txt" trước để nạp đề.');
+        return;
+    }
+
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
 
-    // Trộn ngẫu nhiên câu hỏi từ TOÀN BỘ ngân hàng để thi
+    // Bốc ngẫu nhiên từ toàn bộ ngân hàng câu hỏi cả 3 chương
     const shuffled = [...globalBank].sort(() => Math.random() - 0.5);
     activeQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
     userState = {};
@@ -348,7 +313,7 @@ function startExam(count, minutes, btnEl) {
         updateTimerDisplay();
         if (timeLeft <= 0) {
             stopTimer();
-            alert('HẾT GIỜ LÀM BÀI! Hãy kiểm tra điểm số của bạn trên bảng điều khiển.');
+            alert('HẾT GIỜ LÀM BÀI! Hãy kiểm tra điểm số.');
         }
     }, 1000);
 
@@ -378,7 +343,9 @@ function renderQuestions() {
     const letters = ['A', 'B', 'C', 'D'];
 
     if (activeQuestions.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub);">Chưa có câu hỏi nào. Hãy bấm nút <b>"📁 Nạp 3 File .txt"</b> ở trên để đưa câu hỏi vào!</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:50px 15px; color:var(--text-sub);">
+            Mục này chưa có câu hỏi.<br>Hãy bấm nút <b>"📁 Nạp 3 File .txt"</b> ở thanh menu trên cùng để chọn 3 file câu hỏi!
+        </div>`;
         return;
     }
 
@@ -404,18 +371,18 @@ function renderQuestions() {
             `;
         });
 
-        // ĐÚNG: Ẩn hoàn toàn. SAI: Bật ngay khung đỏ giải thích & bẫy!
+        // Chỉ hiện giải thích khi làm SAI
         const showExplain = isDone && !userState[q.id].isCorrect;
         card.innerHTML = `
             <div class="q-head">
-                <span class="q-badge">Câu ${idx + 1} • Chương ${q.ch || 1}</span>
+                <span class="q-badge">Câu ${idx + 1} (Gốc: Câu ${q.num} - Chương ${q.ch})</span>
                 ${q.trap ? '<span class="q-trap-badge">⚠️ Bẫy Moodle</span>' : ''}
             </div>
             <div class="q-title">${q.q}</div>
             <div class="opt-list">${optsHtml}</div>
             <div class="trap-explain" id="explain-${q.id}" style="${showExplain ? 'display:block;' : ''}">
                 <b>⚠️ TẠI SAO SAI & CẢNH BÁO BẪY:</b>
-                ${q.trap || `Đáp án chính xác là: ${letters[q.ans]}.${q.opts[q.ans]}`}
+                ${q.trap || `Đáp án đúng là: ${letters[q.ans]}.${q.opts[q.ans]}`}
             </div>
         `;
         container.appendChild(card);
@@ -467,7 +434,6 @@ function handleAnswer(qId, selectedIdx, questionIdx) {
             else if (idx === selectedIdx && !isCorrect) b.className = 'opt-item disabled is-wrong';
         });
 
-        // Chỉ hiện giải thích khi làm SAI
         const exp = document.getElementById(`explain-${qId}`);
         if (exp) exp.style.display = isCorrect ? 'none' : 'block';
     }
@@ -506,7 +472,7 @@ function shuffleQuestions() {
 }
 
 function resetAnswers() {
-    if (confirm('Làm lại danh sách câu hỏi này từ đầu?')) {
+    if (confirm('Làm lại đề này từ đầu?')) {
         userState = {};
         renderAll();
     }
@@ -518,10 +484,9 @@ function toggleMobileNav() {
     document.getElementById('btn-close-nav').style.display = p.classList.contains('show-mobile') ? 'inline' : 'none';
 }
 
-// Khởi chạy khi nạp trang
+// Khởi chạy
 updateCounters();
 loadMode('ch1');
-autoFetchFromRepo();
 </script>
 </body>
 </html>
