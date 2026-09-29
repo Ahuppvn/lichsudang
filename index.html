@@ -31,8 +31,9 @@
         .brand span { color: var(--gold); }
         .timer-box { background: #1e293b; border: 1px solid var(--gold); color: var(--gold); padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 800; display: none; }
         .head-actions { display: flex; gap: 6px; align-items: center; }
-        .btn-head { background: #1e293b; border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-head { background: #1e293b; border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.15s; }
         .btn-head.btn-import { background: rgba(251, 191, 36, 0.15); border-color: var(--gold); color: var(--gold); }
+        .btn-head.btn-finish { background: var(--correct); color: #000; border-color: var(--correct); font-weight: 900; }
 
         .main-layout { max-width: 1200px; margin: 15px auto; padding: 0 12px; display: grid; grid-template-columns: 1fr 280px; gap: 18px; align-items: start; }
         @media (max-width: 880px) { .main-layout { grid-template-columns: 1fr; } }
@@ -53,6 +54,8 @@
         .score-box { background: #090d16; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--border); }
         .score-num { font-size: 16px; font-weight: 900; }
         .score-sub { font-size: 10px; color: var(--text-sub); }
+
+        .banner-wrong-mode { display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--wrong); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; justify-content: space-between; align-items: center; }
 
         .q-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; scroll-margin-top: 75px; transition: border-color 0.2s; }
         .q-card.done-ok { border-color: var(--correct); }
@@ -94,6 +97,29 @@
             .moodle-nav-panel.show-mobile { display: block; }
         }
 
+        /* MODAL BẢNG ĐIỂM KẾT QUẢ HIỆN ĐẠI */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(3, 7, 18, 0.88); backdrop-filter: blur(8px); z-index: 2500; align-items: center; justify-content: center; padding: 16px; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .result-card { background: #131926; border: 1.5px solid var(--border); border-radius: 20px; padding: 26px 20px; width: 100%; max-width: 520px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.85); position: relative; }
+        .res-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
+        
+        .score-circle { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid var(--accent); background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(9,13,22,0.8) 100%); }
+        .score-main-val { font-size: 32px; font-weight: 900; line-height: 1; }
+        .score-max-val { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+        .result-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; }
+        .stat-item { background: #090d16; border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px; }
+        .stat-val { font-size: 18px; font-weight: 900; }
+        .stat-lbl { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+        .result-actions { display: flex; flex-direction: column; gap: 8px; }
+        .btn-res-action { padding: 12px; border-radius: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; border: none; transition: 0.15s; }
+        .btn-res-review { background: rgba(239, 68, 68, 0.2); border: 1px solid var(--wrong); color: #f87171; }
+        .btn-res-review:hover { background: var(--wrong); color: #fff; }
+        .btn-res-retry { background: var(--accent); color: #000; }
+        .btn-res-close { background: #1e293b; color: var(--text-main); }
+
         #paste-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; align-items: center; justify-content: center; }
         .paste-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; width: 100%; max-width: 600px; }
         .paste-textarea { width: 100%; height: 220px; background: #090d16; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 10px; font-size: 13px; outline: none; margin: 10px 0; }
@@ -106,11 +132,12 @@
         <div class="brand">🎯 LỊCH SỬ ĐẢNG <span>MOODLE</span></div>
         <div class="timer-box" id="timer-box">⏱️ 40:00</div>
         <div class="head-actions">
+            <button class="btn-head btn-finish" onclick="finishTestAndShowResult()">🏁 Nộp Bài</button>
             <input type="file" id="file-picker" multiple accept=".txt" style="display:none;" onchange="handleFileSelect(event)">
-            <button class="btn-head btn-import" onclick="document.getElementById('file-picker').click()">📁 Nạp File .txt</button>
+            <button class="btn-head btn-import" onclick="document.getElementById('file-picker').click()">📁 Nạp File</button>
             <button class="btn-head" onclick="openPasteModal()">📋 Dán Text</button>
             <button class="btn-head" onclick="shuffleQuestions()">🔀 Tráo đề</button>
-            <button class="btn-head" onclick="clearDataAndReset()">Xóa dữ liệu</button>
+            <button class="btn-head" onclick="clearDataAndReset()">Xóa</button>
         </div>
     </div>
 </header>
@@ -157,6 +184,11 @@
             </div>
         </div>
 
+        <div class="banner-wrong-mode" id="banner-wrong-mode">
+            <span style="font-size: 13px; font-weight: 800; color: #f87171;">⚠️ Đang xem chế độ ôn tập: Chỉ hiển thị các câu làm sai</span>
+            <button class="btn-head" onclick="exitReviewMode()" style="background:#000; border-color:var(--wrong);">Thoát chế độ này</button>
+        </div>
+
         <div id="questions-container"></div>
     </div>
 
@@ -166,6 +198,42 @@
             <span onclick="toggleMobileNav()" style="cursor:pointer; display:none;" id="btn-close-nav">✕ Đóng</span>
         </div>
         <div class="moodle-grid" id="moodle-grid"></div>
+    </div>
+</div>
+
+<!-- MODAL BẢNG ĐIỂM THI THỬ -->
+<div class="modal-overlay" id="result-modal">
+    <div class="result-card">
+        <div id="res-badge" class="res-badge">ĐÁNH GIÁ KẾT QUẢ</div>
+        
+        <div class="score-circle" id="res-circle">
+            <div class="score-main-val" id="res-score">0.0</div>
+            <div class="score-max-val">Thang điểm 10</div>
+        </div>
+
+        <h3 id="res-title" style="font-size: 17px; margin-bottom: 4px;">Hoàn thành bài thi!</h3>
+        <p id="res-desc" style="font-size: 12.5px; color: var(--text-sub); margin-bottom: 15px;">Dưới đây là thống kê chi tiết kết quả làm bài của bạn.</p>
+
+        <div class="result-stats-grid">
+            <div class="stat-item">
+                <div class="stat-val" id="res-correct" style="color: var(--correct);">0</div>
+                <div class="stat-lbl">Số câu đúng</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" id="res-wrong" style="color: var(--wrong);">0</div>
+                <div class="stat-lbl">Số câu sai</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" id="res-skip" style="color: var(--gold);">0</div>
+                <div class="stat-lbl">Chưa làm</div>
+            </div>
+        </div>
+
+        <div class="result-actions">
+            <button class="btn-res-action btn-res-review" id="btn-review-wrong" onclick="reviewWrongQuestions()">🔍 Xem lại các câu làm sai</button>
+            <button class="btn-res-action btn-res-retry" onclick="restartCurrentTest()">🔄 Làm lại đề này</button>
+            <button class="btn-res-action btn-res-close" onclick="closeResultModal()">✕ Đóng bảng điểm</button>
+        </div>
     </div>
 </div>
 
@@ -186,6 +254,7 @@
 let globalBank = JSON.parse(localStorage.getItem('LSD_ULTRA_BANK_2026') || '[]');
 let currentMode = 'ch1';
 let activeQuestions = [];
+let originalExamPool = []; // Lưu lại đề thi gốc để xem lại hoặc thoát chế độ sai
 let userState = {}; 
 let timerInterval = null;
 let timeLeft = 0;
@@ -202,14 +271,12 @@ function detectChapterSmart(fname, text) {
     return 1;
 }
 
-// BỘ TRÍCH XUẤT CHUẨN XÁC DỰA THEO KHỐI "NHÓM 1" VÀ "NHÓM 2"
 function parseTextToQuestions(text, fname) {
     const chNumber = detectChapterSmart(fname, text);
     const sections = text.split(/(?=NHÓM\s*[12]:)/i);
     const parsed = [];
 
     sections.forEach(sec => {
-        // Chỉ những câu nằm dưới khối NHÓM 1 mới được tính là mốc thời gian
         const isTimeGroup = /NHÓM\s*1\s*:\s*CÁC\s*CÂU\s*HỎI\s*VỀ\s*THỜI\s*GIAN/i.test(sec);
         const rawBlocks = sec.split(/🔴\s*(?:\*\*)?Câu hỏi\s*(\d+)[\*:]*/i);
 
@@ -237,7 +304,7 @@ function parseTextToQuestions(text, fname) {
                     }
                     opts.push(optText);
                 } else if (line.includes('⚠️') || /lưu ý bẫy moodle/i.test(line)) {
-                    trap = line.replace(/^[⚠️\*\s]+/, '').replace(/^Lưu ý bẫy Moodle[:\s\*\-]*/i, '').replace(/[\*]+$/, '').trim();
+                    trap = line.replace(/^[⚠️️\*\s]+/, '').replace(/^Lưu ý bẫy Moodle[:\s\*\-]*/i, '').replace(/[\*]+$/, '').trim();
                 } else if (trap && line.length > 0 && !line.startsWith('🔴')) {
                     trap += ' ' + line.replace(/[\*]+$/, '').trim();
                 }
@@ -291,15 +358,8 @@ async function handleFileSelect(evt) {
     const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
     const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
     const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
-    const tAll = t1 + t2 + t3;
 
-    alert(`🎉 NẠP THÀNH CÔNG!\n\n` +
-          `• Mốc Chương 1: ${t1} câu\n` +
-          `• Mốc Chương 2: ${t2} câu\n` +
-          `• Mốc Chương 3: ${t3} câu\n` +
-          `📅 Tổng câu mốc thời gian: ${tAll} câu!\n` +
-          `🎯 TỔNG NGÂN HÀNG: ${globalBank.length} CÂU HỎI.`);
-
+    alert(`🎉 NẠP THÀNH CÔNG!\n• Mốc C1: ${t1} câu | Mốc C2: ${t2} câu | Mốc C3: ${t3} câu\n🎯 Tổng ngân hàng: ${globalBank.length} câu`);
     loadMode(currentMode);
     evt.target.value = '';
 }
@@ -329,7 +389,6 @@ function updateCounters() {
     const c3 = globalBank.filter(q => q.ch === 3).length;
     const traps = globalBank.filter(q => q.trap && q.trap.length > 0).length;
 
-    // Đếm chuẩn xác theo flag isTime
     const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
     const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
     const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
@@ -351,6 +410,7 @@ function loadMode(mode, btnEl) {
     currentMode = mode;
     stopTimer();
     document.getElementById('timer-box').style.display = 'none';
+    document.getElementById('banner-wrong-mode').style.display = 'none';
 
     if (btnEl) {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -367,21 +427,24 @@ function loadMode(mode, btnEl) {
     else if (mode === 'time_all') activeQuestions = globalBank.filter(q => q.isTime).sort((a,b) => a.ch - b.ch || a.num - b.num);
     else if (mode === 'all') activeQuestions = [...globalBank];
 
+    originalExamPool = [...activeQuestions];
     userState = {};
     renderAll();
 }
 
 function startExam(count, minutes, btnEl) {
     if (globalBank.length === 0) {
-        alert('Chưa có câu hỏi nào! Hãy bấm "📁 Nạp File .txt" hoặc "📋 Dán Text" trước.');
+        alert('Chưa có câu hỏi nào! Hãy bấm "📁 Nạp File" hoặc "📋 Dán Text" trước.');
         return;
     }
 
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
+    document.getElementById('banner-wrong-mode').style.display = 'none';
 
     const shuffled = [...globalBank].sort(() => Math.random() - 0.5);
     activeQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+    originalExamPool = [...activeQuestions];
     userState = {};
 
     timeLeft = minutes * 60;
@@ -395,7 +458,7 @@ function startExam(count, minutes, btnEl) {
         updateTimerDisplay();
         if (timeLeft <= 0) {
             stopTimer();
-            alert('HẾT GIỜ LÀM BÀI! Hãy kiểm tra điểm số.');
+            finishTestAndShowResult();
         }
     }, 1000);
 
@@ -406,7 +469,7 @@ function startExam(count, minutes, btnEl) {
 function updateTimerDisplay() {
     const m = Math.floor(timeLeft / 60);
     const s = timeLeft % 60;
-    document.getElementById('timer-box').innerText = `⏱️️ ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    document.getElementById('timer-box').innerText = `⏱️ ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
 function stopTimer() {
@@ -426,7 +489,7 @@ function renderQuestions() {
 
     if (activeQuestions.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding:50px 15px; color:var(--text-sub);">
-            Mục này chưa có câu hỏi nào.<br>Hãy bấm nút <b>"📁 Nạp File .txt"</b> hoặc <b>"📋 Dán Text"</b> ở trên để nạp câu hỏi vào!
+            Mục này hiện không có câu hỏi nào.
         </div>`;
         return;
     }
@@ -530,6 +593,11 @@ function handleAnswer(qId, selectedIdx, questionIdx) {
     }
 
     updateDashboard();
+
+    // Nếu đã làm hết câu trong đề thi thử -> tự động mở bảng điểm
+    if (Object.keys(userState).length === activeQuestions.length && activeQuestions.length > 0) {
+        setTimeout(finishTestAndShowResult, 500);
+    }
 }
 
 function updateDashboard() {
@@ -549,9 +617,113 @@ function updateDashboard() {
     document.getElementById('s-point').innerText = point;
 }
 
+// XỬ LÝ NỘP BÀI & HIỂN THỊ BẢNG ĐIỂM
+function finishTestAndShowResult() {
+    stopTimer();
+    const total = activeQuestions.length;
+    if (total === 0) {
+        alert('Chưa có câu hỏi nào để tổng kết!');
+        return;
+    }
+
+    let correct = 0;
+    let wrong = 0;
+    
+    activeQuestions.forEach(q => {
+        if (userState[q.id]) {
+            if (userState[q.id].isCorrect) correct++;
+            else wrong++;
+        }
+    });
+
+    const skipped = total - (correct + wrong);
+    const score = ((correct / total) * 10).toFixed(1);
+
+    document.getElementById('res-score').innerText = score;
+    document.getElementById('res-correct').innerText = correct;
+    document.getElementById('res-wrong').innerText = wrong;
+    document.getElementById('res-skip').innerText = skipped;
+
+    const badge = document.getElementById('res-badge');
+    const circle = document.getElementById('res-circle');
+    const title = document.getElementById('res-title');
+    const desc = document.getElementById('res-desc');
+    const btnReview = document.getElementById('btn-review-wrong');
+
+    if (score >= 8.5) {
+        badge.innerText = 'XUẤT SẮC - ĐẠT CHUẨN CAO';
+        badge.style.background = 'rgba(16, 185, 129, 0.2)';
+        badge.style.color = '#34d399';
+        circle.style.borderColor = 'var(--correct)';
+        title.innerText = 'Phong độ thi đấu tuyệt vời! 🎯';
+        desc.innerText = 'Kiến thức rất vững vàng, sẵn sàng quét sạch đề thi Moodle!';
+    } else if (score >= 6.5) {
+        badge.innerText = 'ĐẠT YÊU CẦU - CẦN LƯU Ý BẪY';
+        badge.style.background = 'rgba(251, 191, 36, 0.2)';
+        badge.style.color = 'var(--gold)';
+        circle.style.borderColor = 'var(--gold)';
+        title.innerText = 'Kết quả khá tốt! ⚡';
+        desc.innerText = 'Bạn đã nắm được sườn bài, chỉ cần rà soát lại các bẫy câu chữ.';
+    } else {
+        badge.innerText = 'CẦN ÔN TẬP KỸ HƠN';
+        badge.style.background = 'rgba(239, 68, 68, 0.2)';
+        badge.style.color = '#f87171';
+        circle.style.borderColor = 'var(--wrong)';
+        title.innerText = 'Chưa đạt điểm an toàn! ⚠️';
+        desc.innerText = 'Nên lọc riêng mốc thời gian và bẫy Moodle để luyện phản xạ thêm.';
+    }
+
+    if (wrong === 0) {
+        btnReview.style.display = 'none';
+    } else {
+        btnReview.style.display = 'block';
+        btnReview.innerText = `🔍 Xem lại ${wrong} câu làm sai`;
+    }
+
+    document.getElementById('result-modal').style.display = 'flex';
+}
+
+function closeResultModal() {
+    document.getElementById('result-modal').style.display = 'none';
+}
+
+// XEM LẠI CÁC CÂU LÀM SAI
+function reviewWrongQuestions() {
+    closeResultModal();
+    const wrongList = originalExamPool.filter(q => userState[q.id] && !userState[q.id].isCorrect);
+    
+    if (wrongList.length === 0) {
+        alert('Tuyệt vời! Bạn không làm sai câu nào.');
+        return;
+    }
+
+    activeQuestions = wrongList;
+    document.getElementById('banner-wrong-mode').style.display = 'flex';
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function exitReviewMode() {
+    activeQuestions = [...originalExamPool];
+    document.getElementById('banner-wrong-mode').style.display = 'none';
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartCurrentTest() {
+    closeResultModal();
+    activeQuestions = [...originalExamPool];
+    userState = {};
+    document.getElementById('banner-wrong-mode').style.display = 'none';
+    renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function shuffleQuestions() {
     activeQuestions.sort(() => Math.random() - 0.5);
+    originalExamPool = [...activeQuestions];
     userState = {};
+    document.getElementById('banner-wrong-mode').style.display = 'none';
     renderAll();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
