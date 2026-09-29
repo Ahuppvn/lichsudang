@@ -42,6 +42,8 @@
         .mode-btn:hover, .mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
         .mode-btn.exam { border-color: var(--gold); color: var(--gold); }
         .mode-btn.exam.active { background: var(--gold); color: #000; }
+        .mode-btn.timeline { border-color: #ec4899; color: #ec4899; }
+        .mode-btn.timeline.active { background: #ec4899; color: #fff; border-color: #ec4899; }
 
         .score-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
         .score-box { background: #090d16; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--border); }
@@ -51,9 +53,10 @@
         .q-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; scroll-margin-top: 75px; transition: border-color 0.2s; }
         .q-card.done-ok { border-color: var(--correct); }
         .q-card.done-fail { border-color: var(--wrong); }
-        .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 4px; }
         .q-badge { background: #1e293b; color: var(--accent); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-trap-badge { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+        .q-time-badge { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 
         .opt-list { display: flex; flex-direction: column; gap: 8px; }
@@ -86,7 +89,6 @@
             .moodle-nav-panel.show-mobile { display: block; }
         }
 
-        /* Modal Dán Text */
         #paste-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; align-items: center; justify-content: center; }
         .paste-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; width: 100%; max-width: 600px; }
         .paste-textarea { width: 100%; height: 220px; background: #090d16; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 10px; font-size: 13px; outline: none; margin: 10px 0; }
@@ -118,6 +120,7 @@
                 <button class="mode-btn active" onclick="loadMode('ch1', this)" id="btn-ch1">Chương 1 (<span id="cnt-ch1">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('ch2', this)" id="btn-ch2">Chương 2 (<span id="cnt-ch2">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('ch3', this)" id="btn-ch3">Chương 3 (<span id="cnt-ch3">0</span>)</button>
+                <button class="mode-btn timeline" onclick="loadMode('timeline', this)">📅 Mốc Ngày-Tháng-Năm (<span id="cnt-timeline">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('traps', this)">⚠️ Bẫy Moodle (<span id="cnt-trap">0</span>)</button>
                 <button class="mode-btn" onclick="loadMode('all', this)">Tất Cả (<span id="cnt-all">0</span>)</button>
             </div>
@@ -174,7 +177,15 @@ let userState = {};
 let timerInterval = null;
 let timeLeft = 0;
 
-// NHẬN DIỆN THÔNG MINH BẬC CAO DỰA TRÊN TỪ KHÓA LỊCH SỬ CỐT LÕI
+// Hàm kiểm tra một câu hỏi có thuộc dạng "Mốc Thời Gian / Ngày - Tháng - Năm" không
+function isDateQuestion(q) {
+    const timeRegex = /(ngày|tháng|năm|thời gian nào|vào năm|giai đoạn|khi nào|\d{1,2}\/\d{1,2}|\b(19\d{2}|20\d{2})\b)/i;
+    if (timeRegex.test(q.q)) return true;
+    // Kiểm tra xem các đáp án có toàn chứa ngày tháng năm không
+    const matchCount = q.opts.filter(opt => timeRegex.test(opt)).length;
+    return matchCount >= 2;
+}
+
 function detectChapterSmart(fname, text) {
     const fn = (fname || '').toLowerCase();
     if (fn.includes('chương 3') || fn.includes('chuong 3') || fn.includes('ch3') || fn.includes('3.txt')) return 3;
@@ -182,18 +193,15 @@ function detectChapterSmart(fname, text) {
     if (fn.includes('chương 1') || fn.includes('chuong 1') || fn.includes('ch1') || fn.includes('1.txt')) return 1;
 
     const t = text.toLowerCase();
-    // Từ khóa đặc trưng của Chương 3
     if (t.includes('đổi mới') || t.includes('đại hội vi') || t.includes('đại hội vii') || t.includes('cương lĩnh 1991') || t.includes('cương lĩnh 2011') || t.includes('wto') || t.includes('gạc ma')) {
         return 3;
     }
-    // Từ khóa đặc trưng của Chương 2
     if (t.includes('điện biên phủ') || t.includes('hiệp định pari') || t.includes('hiệp định sơ bộ') || t.includes('kháng chiến chống thực dân pháp') || t.includes('nava') || t.includes('vạn tường')) {
         return 2;
     }
     return 1;
 }
 
-// BỘ TRÍCH XUẤT CÂU HỎI CHUẨN XÁC
 function parseTextToQuestions(text, fname) {
     const chNumber = detectChapterSmart(fname, text);
     const rawBlocks = text.split(/🔴\s*(?:\*\*)?Câu hỏi\s*(\d+)[\*:]*/i);
@@ -244,7 +252,6 @@ function parseTextToQuestions(text, fname) {
     return { ch: chNumber, list: parsed };
 }
 
-// CƠ CHẾ NẠP CỘNG DỒN THÔNG MINH (UPSERT)
 function saveQuestionsToBank(parsedResult) {
     let addedOrUpdated = 0;
     parsedResult.list.forEach(q => {
@@ -262,7 +269,6 @@ function saveQuestionsToBank(parsedResult) {
     return addedOrUpdated;
 }
 
-// Xử lý nạp file
 async function handleFileSelect(evt) {
     const files = evt.target.files;
     if (!files || files.length === 0) return;
@@ -287,7 +293,6 @@ async function handleFileSelect(evt) {
     evt.target.value = '';
 }
 
-// Xử lý dán text
 function openPasteModal() { document.getElementById('paste-modal').style.display = 'flex'; }
 function closePasteModal() { document.getElementById('paste-modal').style.display = 'none'; }
 function handlePasteImport() {
@@ -312,12 +317,14 @@ function updateCounters() {
     const c2 = globalBank.filter(q => q.ch === 2).length;
     const c3 = globalBank.filter(q => q.ch === 3).length;
     const traps = globalBank.filter(q => q.trap && q.trap.length > 0).length;
+    const timeCount = globalBank.filter(q => isDateQuestion(q)).length;
 
     document.getElementById('cnt-all').innerText = total;
     document.getElementById('cnt-ch1').innerText = c1;
     document.getElementById('cnt-ch2').innerText = c2;
     document.getElementById('cnt-ch3').innerText = c3;
     document.getElementById('cnt-trap').innerText = traps;
+    document.getElementById('cnt-timeline').innerText = timeCount;
 }
 
 function loadMode(mode, btnEl) {
@@ -334,6 +341,7 @@ function loadMode(mode, btnEl) {
     else if (mode === 'ch2') activeQuestions = globalBank.filter(q => q.ch === 2).sort((a,b) => a.num - b.num);
     else if (mode === 'ch3') activeQuestions = globalBank.filter(q => q.ch === 3).sort((a,b) => a.num - b.num);
     else if (mode === 'traps') activeQuestions = globalBank.filter(q => q.trap && q.trap.length > 0);
+    else if (mode === 'timeline') activeQuestions = globalBank.filter(q => isDateQuestion(q));
     else if (mode === 'all') activeQuestions = [...globalBank];
 
     userState = {};
@@ -422,12 +430,16 @@ function renderQuestions() {
             `;
         });
 
-        // Chỉ hiện giải thích khi làm SAI
         const showExplain = isDone && !userState[q.id].isCorrect;
+        const isTimeQ = isDateQuestion(q);
+
         card.innerHTML = `
             <div class="q-head">
                 <span class="q-badge">Câu ${idx + 1} (Gốc: Câu ${q.num} - Chương ${q.ch})</span>
-                ${q.trap ? '<span class="q-trap-badge">⚠️ Bẫy Moodle</span>' : ''}
+                <div>
+                    ${isTimeQ ? '<span class="q-time-badge">⏱️ Mốc thời gian</span>' : ''}
+                    ${q.trap ? '<span class="q-trap-badge">⚠️ Bẫy Moodle</span>' : ''}
+                </div>
             </div>
             <div class="q-title">${q.q}</div>
             <div class="opt-list">${optsHtml}</div>
