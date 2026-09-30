@@ -20,6 +20,7 @@
             --gold: #fbbf24;
             --nav-border: #475569;
             --timeline-color: #ec4899;
+            --congress-color: #f97316;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -50,6 +51,9 @@
         .mode-btn.timeline { border-color: var(--timeline-color); color: var(--timeline-color); }
         .mode-btn.timeline.active { background: var(--timeline-color); color: #fff; border-color: var(--timeline-color); }
 
+        .mode-btn.congress { border-color: var(--congress-color); color: var(--congress-color); }
+        .mode-btn.congress.active { background: var(--congress-color); color: #fff; border-color: var(--congress-color); }
+
         .score-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
         .score-box { background: #090d16; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--border); }
         .score-num { font-size: 16px; font-weight: 900; }
@@ -64,6 +68,7 @@
         .badge-wrap { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         .q-badge { background: #1e293b; color: var(--accent); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-time-badge { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+        .q-congress-badge { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-trap-badge { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
         .q-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 
@@ -97,7 +102,6 @@
             .moodle-nav-panel.show-mobile { display: block; }
         }
 
-        /* MODAL BẢNG ĐIỂM KẾT QUẢ HIỆN ĐẠI */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(3, 7, 18, 0.88); backdrop-filter: blur(8px); z-index: 2500; align-items: center; justify-content: center; padding: 16px; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
@@ -145,7 +149,12 @@
 <div class="main-layout">
     <div>
         <div class="mode-card">
-            <span class="mode-label" style="color: var(--timeline-color);">📅 LUYỆN RIÊNG MỐC THỜI GIAN THEO TỪNG CHƯƠNG:</span>
+            <span class="mode-label" style="color: var(--congress-color);">🏛️ CHUYÊN ĐỀ ĐẶC BIỆT: CÁC KỲ ĐẠI HỘI ĐẢNG:</span>
+            <div class="mode-row">
+                <button class="mode-btn congress" onclick="loadMode('congress_c3', this)">🏛️ Đại Hội C3 (<span id="cnt-congress">0</span>)</button>
+            </div>
+
+            <span class="mode-label" style="color: var(--timeline-color);">📅 CHUYÊN ĐỀ MỐC THỜI GIAN & NGÀY THÁNG NĂM:</span>
             <div class="mode-row">
                 <button class="mode-btn timeline" onclick="loadMode('time_ch1', this)">📅 Mốc C1 (<span id="cnt-time-ch1">0</span>)</button>
                 <button class="mode-btn timeline" onclick="loadMode('time_ch2', this)">📅 Mốc C2 (<span id="cnt-time-ch2">0</span>)</button>
@@ -201,7 +210,6 @@
     </div>
 </div>
 
-<!-- MODAL BẢNG ĐIỂM THI THỬ -->
 <div class="modal-overlay" id="result-modal">
     <div class="result-card">
         <div id="res-badge" class="res-badge">ĐÁNH GIÁ KẾT QUẢ</div>
@@ -254,10 +262,19 @@
 let globalBank = JSON.parse(localStorage.getItem('LSD_ULTRA_BANK_2026') || '[]');
 let currentMode = 'ch1';
 let activeQuestions = [];
-let originalExamPool = []; // Lưu lại đề thi gốc để xem lại hoặc thoát chế độ sai
+let originalExamPool = [];
 let userState = {}; 
 let timerInterval = null;
 let timeLeft = 0;
+
+// BỘ LỌC CÁC CÂU HỎI VỀ ĐẠI HỘI Ở CHƯƠNG 3
+function isCongressQuestion(q) {
+    if (q.ch !== 3) return false;
+    const congressRegex = /(đại hội|khoá iv|khoá v|khóa vi|khóa vii|khóa viii|khóa ix|khóa x|khóa xi|khóa xii|khóa xiii)/i;
+    if (congressRegex.test(q.q)) return true;
+    const matchCount = q.opts.filter(opt => congressRegex.test(opt)).length;
+    return matchCount >= 2;
+}
 
 function detectChapterSmart(fname, text) {
     const fn = (fname || '').toLowerCase();
@@ -304,14 +321,14 @@ function parseTextToQuestions(text, fname) {
                     }
                     opts.push(optText);
                 } else if (line.includes('⚠️') || /lưu ý bẫy moodle/i.test(line)) {
-                    trap = line.replace(/^[⚠️️\*\s]+/, '').replace(/^Lưu ý bẫy Moodle[:\s\*\-]*/i, '').replace(/[\*]+$/, '').trim();
+                    trap = line.replace(/^[⚠️\*\s]+/, '').replace(/^Lưu ý bẫy Moodle[:\s\*\-]*/i, '').replace(/[\*]+$/, '').trim();
                 } else if (trap && line.length > 0 && !line.startsWith('🔴')) {
                     trap += ' ' + line.replace(/[\*]+$/, '').trim();
                 }
             }
 
             if (opts.length >= 2 && ans !== -1) {
-                parsed.push({
+                const item = {
                     id: `c${chNumber}_${num}`,
                     num: num,
                     ch: chNumber,
@@ -320,7 +337,8 @@ function parseTextToQuestions(text, fname) {
                     ans: ans,
                     trap: trap,
                     isTime: isTimeGroup
-                });
+                };
+                parsed.push(item);
             }
         }
     });
@@ -358,8 +376,9 @@ async function handleFileSelect(evt) {
     const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
     const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
     const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
+    const cCong = globalBank.filter(q => isCongressQuestion(q)).length;
 
-    alert(`🎉 NẠP THÀNH CÔNG!\n• Mốc C1: ${t1} câu | Mốc C2: ${t2} câu | Mốc C3: ${t3} câu\n🎯 Tổng ngân hàng: ${globalBank.length} câu`);
+    alert(`🎉 NẠP THÀNH CÔNG!\n• Mốc C1: ${t1} câu | Mốc C2: ${t2} câu | Mốc C3: ${t3} câu\n🏛️ Đại Hội Chương 3: ${cCong} câu\n🎯 Tổng ngân hàng: ${globalBank.length} câu`);
     loadMode(currentMode);
     evt.target.value = '';
 }
@@ -374,11 +393,8 @@ function handlePasteImport() {
     document.getElementById('paste-input').value = '';
     closePasteModal();
 
-    const t1 = globalBank.filter(q => q.ch === 1 && q.isTime).length;
-    const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
-    const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
-
-    alert(`🎉 ĐÃ NẠP THÀNH CÔNG!\n• Mốc C1: ${t1} câu | Mốc C2: ${t2} câu | Mốc C3: ${t3} câu`);
+    const cCong = globalBank.filter(q => isCongressQuestion(q)).length;
+    alert(`🎉 ĐÃ NẠP THÀNH CÔNG!\n• Nhận diện được ${cCong} câu hỏi Đại Hội Chương 3!`);
     loadMode(currentMode);
 }
 
@@ -393,6 +409,7 @@ function updateCounters() {
     const t2 = globalBank.filter(q => q.ch === 2 && q.isTime).length;
     const t3 = globalBank.filter(q => q.ch === 3 && q.isTime).length;
     const tAll = t1 + t2 + t3;
+    const cCong = globalBank.filter(q => isCongressQuestion(q)).length;
 
     document.getElementById('cnt-all').innerText = total;
     document.getElementById('cnt-ch1').innerText = c1;
@@ -404,6 +421,7 @@ function updateCounters() {
     document.getElementById('cnt-time-ch2').innerText = t2;
     document.getElementById('cnt-time-ch3').innerText = t3;
     document.getElementById('cnt-time-all').innerText = tAll;
+    document.getElementById('cnt-congress').innerText = cCong;
 }
 
 function loadMode(mode, btnEl) {
@@ -425,6 +443,7 @@ function loadMode(mode, btnEl) {
     else if (mode === 'time_ch2') activeQuestions = globalBank.filter(q => q.ch === 2 && q.isTime).sort((a,b) => a.num - b.num);
     else if (mode === 'time_ch3') activeQuestions = globalBank.filter(q => q.ch === 3 && q.isTime).sort((a,b) => a.num - b.num);
     else if (mode === 'time_all') activeQuestions = globalBank.filter(q => q.isTime).sort((a,b) => a.ch - b.ch || a.num - b.num);
+    else if (mode === 'congress_c3') activeQuestions = globalBank.filter(q => isCongressQuestion(q)).sort((a,b) => a.num - b.num);
     else if (mode === 'all') activeQuestions = [...globalBank];
 
     originalExamPool = [...activeQuestions];
@@ -517,11 +536,13 @@ function renderQuestions() {
         });
 
         const showExplain = isDone && !userState[q.id].isCorrect;
+        const isCong = isCongressQuestion(q);
 
         card.innerHTML = `
             <div class="q-head">
                 <span class="q-badge">Câu ${idx + 1} (Gốc: Câu ${q.num} - Chương ${q.ch})</span>
                 <div class="badge-wrap">
+                    ${isCong ? '<span class="q-congress-badge">🏛️ Đại Hội Đảng</span>' : ''}
                     ${q.isTime ? '<span class="q-time-badge">⏱️ Mốc thời gian</span>' : ''}
                     ${q.trap ? '<span class="q-trap-badge">⚠️ Bẫy Moodle</span>' : ''}
                 </div>
@@ -594,7 +615,6 @@ function handleAnswer(qId, selectedIdx, questionIdx) {
 
     updateDashboard();
 
-    // Nếu đã làm hết câu trong đề thi thử -> tự động mở bảng điểm
     if (Object.keys(userState).length === activeQuestions.length && activeQuestions.length > 0) {
         setTimeout(finishTestAndShowResult, 500);
     }
@@ -617,7 +637,6 @@ function updateDashboard() {
     document.getElementById('s-point').innerText = point;
 }
 
-// XỬ LÝ NỘP BÀI & HIỂN THỊ BẢNG ĐIỂM
 function finishTestAndShowResult() {
     stopTimer();
     const total = activeQuestions.length;
@@ -687,7 +706,6 @@ function closeResultModal() {
     document.getElementById('result-modal').style.display = 'none';
 }
 
-// XEM LẠI CÁC CÂU LÀM SAI
 function reviewWrongQuestions() {
     closeResultModal();
     const wrongList = originalExamPool.filter(q => userState[q.id] && !userState[q.id].isCorrect);
